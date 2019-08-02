@@ -4,8 +4,19 @@
     "main": "index.js",
     "author": "Guy Balaam <guybal@amazon.com>",
     "license": "MIT",
+    "scripts": {
+        "start": "nodemon",
+        "build": "yarn run clean:dist && yarn run copy:lib && yarn run copy:client && yarn run copy:server",
+        "clean:dist": "mkdir -p dist && rm -rf dist/*",
+        "copy:lib": "mkdir -p dist && cp -R lib dist",
+        "copy:client": "mkdir -p dist && cp -R src/client/* dist/lib",
+        "copy:server": "mkdir -p dist/src/server && cp -R src/server dist/src"
+    },
     "dependencies": {
         "express": "^4.17.1",
         "socket.io": "^2.2.0"
+    },
+    "devDependencies": {
+        "nodemon": "^1.19.1"
     }
 }
