@@ -1,0 +1,7 @@
+{
+  "name": "joust",
+  "version": "1.0.0",
+  "main": "index.js",
+  "author": "Guy Balaam <guybal@amazon.com>",
+  "license": "MIT"
+}
