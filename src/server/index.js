@@ -23,6 +23,6 @@ app.get('*', (_req, res) => {
     res.send(html());
 });
 
-server.listen(3000, function () {
+server.listen(3000, '0.0.0.0', () => {
     console.log('listening on *:3000');
 });
