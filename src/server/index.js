@@ -7,6 +7,7 @@ const server = require('http').createServer(app);
 const io = socketIO(server);
 const { html } = require('./html');
 
+const PORT = process.env.PORT || 3000;
 const PGK_ROOT = resolve(__dirname, '../../');
 const LIB_DIR = resolve(PGK_ROOT, 'lib');
 
@@ -23,6 +24,6 @@ app.get('*', (_req, res) => {
     res.send(html());
 });
 
-server.listen(3000, '0.0.0.0', () => {
-    console.log('listening on *:3000');
+server.listen(PORT, '0.0.0.0', () => {
+    console.log(`listening on *:${PORT}`);
 });
