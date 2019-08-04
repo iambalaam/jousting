@@ -23,8 +23,8 @@ let unmatchedSocket;
 io.on('connection', (socket) => {
     if (unmatchedSocket) {
         // Join game
-        unmatchedSocket.emit('initialise', 1);
-        socket.emit('initialise', 2);
+        unmatchedSocket.emit('initialise', 'blue');
+        socket.emit('initialise', 'orange');
         proxyGameEvents(unmatchedSocket, socket);
         unmatchedSocket = undefined;
     } else {

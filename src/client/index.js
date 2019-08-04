@@ -2,6 +2,7 @@ const socket = io();
 
 let floor;
 let player;
+let playerColor;
 let enemy;
 
 const GAME_STATE = {
@@ -12,9 +13,9 @@ const GAME_STATE = {
 }
 let state = GAME_STATE.WAITING;
 
-socket.on('initialise', (playerNumber) => {
-    socket.emit('test', 123);
-    setupGame(playerNumber);
+socket.on('initialise', (color) => {
+    playerColor = color;
+    setupGame(color);
     state = GAME_STATE.GAMEPLAY;
 });
 
@@ -31,8 +32,9 @@ socket.on('hit', (hit) => {
         enemy.swordTip.x, enemy.swordTip.y
     );
     drawSprites();
-    drawText('You lose!');
-    drawSmallText('refresh the page for rematch');
+    drawTopLeft(playerColor);
+    drawTitle('You lose!');
+    drawSubtitle('refresh the page for rematch');
     state = GAME_STATE.LOST;
 });
 
@@ -66,15 +68,15 @@ function setup() {
     floor.shapeColor = BG_COLOR;
 }
 
-const setupGame = (playerNumber) => {
-    const initialPlayerX = playerNumber === 1 ? CANVAS_WIDTH / 5 : 4 * CANVAS_WIDTH / 5
-    const initialEnemyX = playerNumber === 1 ? 4 * CANVAS_WIDTH / 5 : CANVAS_WIDTH / 5
+const setupGame = (color) => {
+    const initialPlayerX = color === 'blue' ? CANVAS_WIDTH / 5 : 4 * CANVAS_WIDTH / 5
+    const initialEnemyX = color === 'blue' ? 4 * CANVAS_WIDTH / 5 : CANVAS_WIDTH / 5
 
     player = createSprite(initialPlayerX, CANVAS_HEIGHT - FLOOR_HEIGHT - 100, PLAYER_SIZE, PLAYER_SIZE);
-    player.shapeColor = color(10, 10, 10);
+    player.shapeColor = color;
 
     enemy = createSprite(initialEnemyX, CANVAS_HEIGHT - FLOOR_HEIGHT - 100, PLAYER_SIZE, PLAYER_SIZE);
-    enemy.shapeColor = color(10, 10, 10);
+    enemy.shapeColor = color === 'blue' ? 'orange' : 'blue';
 
     socket.on('player-state', ({ position, swordTip }) => {
         enemy.position = position;
@@ -97,20 +99,26 @@ function draw() {
     }
 }
 
-const drawText = (s) => {
+const drawTitle = (s) => {
     textAlign(CENTER);
     textSize(32);
     text(s, CANVAS_WIDTH / 2, CANVAS_HEIGHT / 2);
 }
-const drawSmallText = (s) => {
+const drawSubtitle = (s) => {
     textAlign(CENTER);
     textSize(24);
     text(s, CANVAS_WIDTH / 2, (CANVAS_HEIGHT / 2) + 40);
 }
+const drawTopLeft = (color) => {
+    textAlign(LEFT);
+    textSize(24);
+    fill(color);
+    text(color, 30, 30)
+}
 
 const waiting = () => {
     background(200, 200, 200);
-    drawText('Waiting for another player.');
+    drawTitle('Waiting for another player.');
     drawSprites();
 }
 
@@ -216,8 +224,9 @@ const gameplay = () => {
         state = GAME_STATE.WON;
         enemy.shapeColor = 'red';
         drawSprites();
-        drawText('You win!');
-        drawSmallText('refresh the page for rematch');
+        drawTopLeft(playerColor);
+        drawTitle('You win!');
+        drawSubtitle('refresh the page for rematch');
         return;
     }
 
@@ -225,4 +234,5 @@ const gameplay = () => {
 
     // Final draw 
     drawSprites();
+    drawTopLeft(player.shapeColor);
 }
