@@ -12,9 +12,8 @@ const PGK_ROOT = resolve(__dirname, '../../');
 const LIB_DIR = resolve(PGK_ROOT, 'lib');
 
 io.on('connection', function (socket) {
-    socket.on('player-state', (state) => {
-        socket.broadcast.emit('player-state', state);
-    });
+    socket.on('player-state', (state) => { socket.broadcast.emit('player-state', state); });
+    socket.on('hit', (hit) => { socket.broadcast.emit('hit', hit); });
 });
 
 app.use('/lib', express.static(LIB_DIR));

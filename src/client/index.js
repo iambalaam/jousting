@@ -1,5 +1,7 @@
 const socket = io();
 
+let gameIsOver = false;
+
 const CANVAS_WIDTH = 800;
 const CANVAS_HEIGHT = 400;
 
@@ -45,9 +47,28 @@ function setup() {
         enemy.swordTip = swordTip;
         enemy.update();
     });
+
+    socket.on('hit', (hit) => {
+        console.log('been hit');
+        player.position = hit.enemy.position;
+        player.swordTip = hit.enemy.swordTip;
+        player.shapeColor = 'red';
+        enemy.position = hit.player.position;
+        enemy.swordTip = hit.player.swordTip;
+        gameIsOver = true;
+    });
 }
 
 function draw() {
+    if (gameIsOver) {
+        // noLoop();
+    } else {
+        // loop();
+        gameplay();
+    }
+}
+
+function gameplay() {
     // repaint next frame
     background(200, 200, 200);
 
@@ -130,6 +151,24 @@ function draw() {
         player.swordTip.y < (enemy.position.y + PLAYER_SIZE / 2) &&
         player.swordTip.y > (enemy.position.y - PLAYER_SIZE / 2)
     ) {
+        console.log('hit');
+        socket.emit('hit', {
+            player: {
+                position: {
+                    x: player.position.x,
+                    y: player.position.y
+                },
+                swordTip: player.swordTip
+            },
+            enemy: {
+                position: {
+                    x: enemy.position.x,
+                    y: enemy.position.y
+                },
+                swordTip: enemy.swordTip
+            }
+        });
+        gameIsOver = true;
         enemy.shapeColor = 'red';
     }
 
