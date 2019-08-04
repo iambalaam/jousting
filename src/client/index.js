@@ -55,11 +55,11 @@ const SWORD_LENGTH = 20;
 const FLOOR_HEIGHT = 100;
 
 const sendPlayerState = (player) => {
-    const { position, velocity } = player;
+    const { position, velocity, swordTip } = player;
     socket.emit('player-state', {
         position: { x: position.x, y: position.y },
         velocity: { x: velocity.x, y: velocity.y },
-        swordTip: player.swordTip
+        swordTip
     });
 }
 
@@ -80,10 +80,12 @@ const setupGame = (color) => {
     enemy = createSprite(initialEnemyX, CANVAS_HEIGHT - FLOOR_HEIGHT - 100, PLAYER_DIAMETER, PLAYER_DIAMETER);
     enemy.shapeColor = color === 'blue' ? 'orange' : 'blue';
 
-    socket.on('player-state', ({ position, swordTip }) => {
-        enemy.position = position;
+    socket.on('player-state', ({ position, velocity, swordTip }) => {
+        enemy.remove();
+        enemy = createSprite(position.x, position.y, PLAYER_DIAMETER, PLAYER_DIAMETER);
+        enemy.shapeColor = color === 'blue' ? 'orange' : 'blue';
+        enemy.setVelocity(velocity.x, velocity.y);
         enemy.swordTip = swordTip;
-        enemy.update();
     });
 }
 
@@ -140,6 +142,7 @@ const gameplay = () => {
 
     // Gravity
     player.velocity.y += GRAVITY;
+    enemy.velocity.y += GRAVITY;
 
     // Pointer
     let pointer;
@@ -206,6 +209,9 @@ const gameplay = () => {
     }
 
     // Collisions
+    enemy.collide(floor, (enemy, _floor) => {
+        enemy.velocity.y = 0;
+    });
     player.collide(floor, (player, _floor) => {
         player.velocity.y = 0;
     });
