@@ -7,7 +7,8 @@ let enemy;
 const GAME_STATE = {
     WAITING: 'WAITING',
     GAMEPLAY: 'GAMEPLAY',
-    END: 'END'
+    WON: 'WON',
+    LOST: 'LOST'
 }
 let state = GAME_STATE.WAITING;
 
@@ -30,7 +31,9 @@ socket.on('hit', (hit) => {
         enemy.swordTip.x, enemy.swordTip.y
     );
     drawSprites();
-    state = GAME_STATE.END;
+    drawText('You lose!');
+    drawSmallText('refresh the page for rematch');
+    state = GAME_STATE.LOST;
 });
 
 const CANVAS_WIDTH = 800;
@@ -88,16 +91,26 @@ function draw() {
         case GAME_STATE.GAMEPLAY:
             gameplay();
             break;
-        case GAME_STATE.END:
+        case GAME_STATE.WON:
+        case GAME_STATE.LOST:
             break;
     }
 }
 
-const waiting = () => {
-    background(200, 200, 200);
+const drawText = (s) => {
     textAlign(CENTER);
     textSize(32);
-    text('Waiting for another player.', CANVAS_WIDTH / 2, CANVAS_HEIGHT / 2);
+    text(s, CANVAS_WIDTH / 2, CANVAS_HEIGHT / 2);
+}
+const drawSmallText = (s) => {
+    textAlign(CENTER);
+    textSize(24);
+    text(s, CANVAS_WIDTH / 2, (CANVAS_HEIGHT / 2) + 40);
+}
+
+const waiting = () => {
+    background(200, 200, 200);
+    drawText('Waiting for another player.');
     drawSprites();
 }
 
@@ -200,9 +213,11 @@ const gameplay = () => {
                 swordTip: enemy.swordTip
             }
         });
-        state = GAME_STATE.END;
+        state = GAME_STATE.WON;
         enemy.shapeColor = 'red';
         drawSprites();
+        drawText('You win!');
+        drawSmallText('refresh the page for rematch');
         return;
     }
 
