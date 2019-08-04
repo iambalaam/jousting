@@ -43,7 +43,8 @@ const CANVAS_HEIGHT = 400;
 
 let BG_COLOR;
 
-const PLAYER_SIZE = 10;
+const PLAYER_DIAMETER = 10;
+const PLAYER_RADIUS = PLAYER_DIAMETER / 2;
 const GRAVITY = 0.2;
 const MAX_VAULT = 10;
 const ACCELERATION = 0.3;
@@ -72,10 +73,10 @@ const setupGame = (color) => {
     const initialPlayerX = color === 'blue' ? CANVAS_WIDTH / 5 : 4 * CANVAS_WIDTH / 5
     const initialEnemyX = color === 'blue' ? 4 * CANVAS_WIDTH / 5 : CANVAS_WIDTH / 5
 
-    player = createSprite(initialPlayerX, CANVAS_HEIGHT - FLOOR_HEIGHT - 100, PLAYER_SIZE, PLAYER_SIZE);
+    player = createSprite(initialPlayerX, CANVAS_HEIGHT - FLOOR_HEIGHT - 100, PLAYER_DIAMETER, PLAYER_DIAMETER);
     player.shapeColor = color;
 
-    enemy = createSprite(initialEnemyX, CANVAS_HEIGHT - FLOOR_HEIGHT - 100, PLAYER_SIZE, PLAYER_SIZE);
+    enemy = createSprite(initialEnemyX, CANVAS_HEIGHT - FLOOR_HEIGHT - 100, PLAYER_DIAMETER, PLAYER_DIAMETER);
     enemy.shapeColor = color === 'blue' ? 'orange' : 'blue';
 
     socket.on('player-state', ({ position, swordTip }) => {
@@ -168,7 +169,7 @@ const gameplay = () => {
     }
 
     // Movement
-    const playerIsOnTheGround = (player.position.y + 1 + PLAYER_SIZE / 2) >= (CANVAS_HEIGHT - FLOOR_HEIGHT)
+    const playerIsOnTheGround = (player.position.y + 1 + PLAYER_RADIUS) >= (CANVAS_HEIGHT - FLOOR_HEIGHT)
     const swordIsInTheGround = player.swordTip && player.swordTip.y + 1 >= (CANVAS_HEIGHT - FLOOR_HEIGHT)
     if (playerIsOnTheGround && pointer && !swordIsInTheGround) {
         // On the Ground
@@ -198,12 +199,21 @@ const gameplay = () => {
         player.velocity.y = 0;
     });
 
+    if (player.position.x < PLAYER_RADIUS) {
+        player.position.x = PLAYER_RADIUS;
+        player.velocity.x = 0;
+    };
+    if (player.position.x > CANVAS_WIDTH - PLAYER_RADIUS) {
+        player.position.x = CANVAS_WIDTH - PLAYER_RADIUS;
+        player.velocity.x = 0;
+    };
+
     if (
         player.swordTip &&
-        player.swordTip.x > (enemy.position.x - PLAYER_SIZE / 2) &&
-        player.swordTip.x < (enemy.position.x + PLAYER_SIZE / 2) &&
-        player.swordTip.y < (enemy.position.y + PLAYER_SIZE / 2) &&
-        player.swordTip.y > (enemy.position.y - PLAYER_SIZE / 2)
+        player.swordTip.x > (enemy.position.x - PLAYER_RADIUS) &&
+        player.swordTip.x < (enemy.position.x + PLAYER_RADIUS) &&
+        player.swordTip.y < (enemy.position.y + PLAYER_RADIUS) &&
+        player.swordTip.y > (enemy.position.y - PLAYER_RADIUS)
     ) {
         socket.emit('hit', {
             player: {
