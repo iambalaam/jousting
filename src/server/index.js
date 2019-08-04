@@ -28,8 +28,15 @@ io.on('connection', (socket) => {
         proxyGameEvents(unmatchedSocket, socket);
         unmatchedSocket = undefined;
     } else {
-        // Wait or game
+        // Wait for game
         unmatchedSocket = socket;
+
+        // If disconnect before match is made
+        socket.on('disconnect', () => {
+            if (unmatchedSocket === socket) {
+                unmatchedSocket = undefined;
+            }
+        })
     }
 });
 
