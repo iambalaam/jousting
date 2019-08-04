@@ -12,10 +12,9 @@ const PGK_ROOT = resolve(__dirname, '../../');
 const LIB_DIR = resolve(PGK_ROOT, 'lib');
 
 io.on('connection', function (socket) {
-    socket.on('chat message', function (msg) {
-        io.emit('chat message', msg);
+    socket.on('player-state', (state) => {
+        socket.broadcast.emit('player-state', state);
     });
-    socket.emit('chat message', 'welcome to the chat room!');
 });
 
 app.use('/lib', express.static(LIB_DIR));

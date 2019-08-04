@@ -9,6 +9,7 @@ const html = () => `
     <link rel="stylesheet" href="/lib/index.css">
     <script src="/lib/p5.min.js"></script>
     <script src="/lib/p5.play.js" type="text/javascript"></script>
+    <script src="/socket.io/socket.io.js"></script>
     <script src="/lib/index.js" type="text/javascript"></script>
 </head>
 
@@ -20,5 +21,5 @@ const html = () => `
 `;
 
 module.exports = {
-  html
+    html
 };
