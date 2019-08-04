@@ -2,6 +2,7 @@ const socket = io();
 
 let floor;
 let player;
+let prevSwordAngle;
 let playerColor;
 let enemy;
 
@@ -43,14 +44,14 @@ const CANVAS_HEIGHT = 400;
 
 let BG_COLOR;
 
-const PLAYER_DIAMETER = 10;
+const PLAYER_DIAMETER = 15;
 const PLAYER_RADIUS = PLAYER_DIAMETER / 2;
 const GRAVITY = 0.2;
 const MAX_VAULT = 10;
 const ACCELERATION = 0.3;
 const MAX_SPEED = 6;
 const AIR_MANEUVERABILITY = 0.2;
-const SWORD_LENGTH = 10;
+const SWORD_LENGTH = 20;
 const FLOOR_HEIGHT = 100;
 
 const sendPlayerState = (player) => {
@@ -101,16 +102,19 @@ function draw() {
 }
 
 const drawTitle = (s) => {
+    strokeWeight(0);
     textAlign(CENTER);
     textSize(32);
     text(s, CANVAS_WIDTH / 2, CANVAS_HEIGHT / 2);
 }
 const drawSubtitle = (s) => {
+    strokeWeight(0);
     textAlign(CENTER);
     textSize(24);
     text(s, CANVAS_WIDTH / 2, (CANVAS_HEIGHT / 2) + 40);
 }
 const drawTopLeft = (color) => {
+    strokeWeight(0);
     textAlign(LEFT);
     textSize(24);
     fill(color);
@@ -118,9 +122,16 @@ const drawTopLeft = (color) => {
 }
 
 const waiting = () => {
+    strokeWeight(0);
     background(200, 200, 200);
     drawTitle('Waiting for another player.');
     drawSprites();
+}
+
+const angleBetweenPoints = ({ x: x1, y: y1 }, { x: x2, y: y2 }) => {
+    return x2 > x1
+        ? Math.atan((y2 - y1) / (x1 - x2))
+        : Math.atan((y2 - y1) / (x1 - x2)) + Math.PI;
 }
 
 const gameplay = () => {
@@ -141,16 +152,15 @@ const gameplay = () => {
     // Sword
     if (pointer) {
         const vel = Math.hypot(player.velocity.x, player.velocity.y);
+
         const swordLength = Math.sqrt(vel) * SWORD_LENGTH;
-        const angle = mouseX > player.position.x
-            ? Math.atan((player.position.y - mouseY) / (mouseX - player.position.x))
-            : Math.atan((player.position.y - mouseY) / (mouseX - player.position.x)) + Math.PI;
+        const angle = angleBetweenPoints(player.position, { x: mouseX, y: mouseY });
         player.swordTip = {
             x: swordLength * Math.cos(angle) + player.position.x,
             y: - swordLength * Math.sin(angle) + player.position.y
         }
         stroke(255);
-        strokeWeight(1);
+        strokeWeight(1.5);
         line(
             player.position.x, player.position.y,
             player.swordTip.x, player.swordTip.y,
@@ -162,6 +172,7 @@ const gameplay = () => {
     // Enemy Sword
     if (enemy.swordTip) {
         stroke(255);
+        strokeWeight(1.5);
         line(
             enemy.position.x, enemy.position.y,
             enemy.swordTip.x, enemy.swordTip.y
