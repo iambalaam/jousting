@@ -1,6 +1,37 @@
 const socket = io();
 
-let gameIsOver = false;
+let floor;
+let player;
+let enemy;
+
+const GAME_STATE = {
+    WAITING: 'WAITING',
+    GAMEPLAY: 'GAMEPLAY',
+    END: 'END'
+}
+let state = GAME_STATE.WAITING;
+
+socket.on('initialise', (playerNumber) => {
+    socket.emit('test', 123);
+    setupGame(playerNumber);
+    state = GAME_STATE.GAMEPLAY;
+});
+
+socket.on('hit', (hit) => {
+    background(200, 200, 200);
+    player.position = hit.enemy.position;
+    player.swordTip = hit.enemy.swordTip;
+    player.shapeColor = 'red';
+    enemy.position = hit.player.position;
+    enemy.swordTip = hit.player.swordTip;
+    stroke(255);
+    line(
+        enemy.position.x, enemy.position.y,
+        enemy.swordTip.x, enemy.swordTip.y
+    );
+    drawSprites();
+    state = GAME_STATE.END;
+});
 
 const CANVAS_WIDTH = 800;
 const CANVAS_HEIGHT = 400;
@@ -16,10 +47,6 @@ const AIR_MANEUVERABILITY = 0.2;
 const SWORD_LENGTH = 10;
 const FLOOR_HEIGHT = 100;
 
-let floor;
-let player;
-let enemy;
-
 const sendPlayerState = (player) => {
     const { position, velocity } = player;
     socket.emit('player-state', {
@@ -32,14 +59,18 @@ const sendPlayerState = (player) => {
 function setup() {
     BG_COLOR = color(89, 124, 66);
     createCanvas(CANVAS_WIDTH, CANVAS_HEIGHT);
-
     floor = createSprite(CANVAS_WIDTH / 2, CANVAS_HEIGHT - FLOOR_HEIGHT / 2, CANVAS_WIDTH, FLOOR_HEIGHT);
     floor.shapeColor = BG_COLOR;
+}
 
-    player = createSprite(CANVAS_WIDTH / 5, CANVAS_HEIGHT - FLOOR_HEIGHT - 20, PLAYER_SIZE, PLAYER_SIZE);
+const setupGame = (playerNumber) => {
+    const initialPlayerX = playerNumber === 1 ? CANVAS_WIDTH / 5 : 4 * CANVAS_WIDTH / 5
+    const initialEnemyX = playerNumber === 1 ? 4 * CANVAS_WIDTH / 5 : CANVAS_WIDTH / 5
+
+    player = createSprite(initialPlayerX, CANVAS_HEIGHT - FLOOR_HEIGHT - 100, PLAYER_SIZE, PLAYER_SIZE);
     player.shapeColor = color(10, 10, 10);
 
-    enemy = createSprite(4 * CANVAS_WIDTH / 5, CANVAS_HEIGHT - FLOOR_HEIGHT - 20, PLAYER_SIZE, PLAYER_SIZE);
+    enemy = createSprite(initialEnemyX, CANVAS_HEIGHT - FLOOR_HEIGHT - 100, PLAYER_SIZE, PLAYER_SIZE);
     enemy.shapeColor = color(10, 10, 10);
 
     socket.on('player-state', ({ position, swordTip }) => {
@@ -47,28 +78,30 @@ function setup() {
         enemy.swordTip = swordTip;
         enemy.update();
     });
-
-    socket.on('hit', (hit) => {
-        console.log('been hit');
-        player.position = hit.enemy.position;
-        player.swordTip = hit.enemy.swordTip;
-        player.shapeColor = 'red';
-        enemy.position = hit.player.position;
-        enemy.swordTip = hit.player.swordTip;
-        gameIsOver = true;
-    });
 }
 
 function draw() {
-    if (gameIsOver) {
-        // noLoop();
-    } else {
-        // loop();
-        gameplay();
+    switch (state) {
+        case GAME_STATE.WAITING:
+            waiting();
+            break;
+        case GAME_STATE.GAMEPLAY:
+            gameplay();
+            break;
+        case GAME_STATE.END:
+            break;
     }
 }
 
-function gameplay() {
+const waiting = () => {
+    background(200, 200, 200);
+    textAlign(CENTER);
+    textSize(32);
+    text('Waiting for another player.', CANVAS_WIDTH / 2, CANVAS_HEIGHT / 2);
+    drawSprites();
+}
+
+const gameplay = () => {
     // repaint next frame
     background(200, 200, 200);
 
@@ -151,7 +184,6 @@ function gameplay() {
         player.swordTip.y < (enemy.position.y + PLAYER_SIZE / 2) &&
         player.swordTip.y > (enemy.position.y - PLAYER_SIZE / 2)
     ) {
-        console.log('hit');
         socket.emit('hit', {
             player: {
                 position: {
@@ -168,8 +200,10 @@ function gameplay() {
                 swordTip: enemy.swordTip
             }
         });
-        gameIsOver = true;
+        state = GAME_STATE.END;
         enemy.shapeColor = 'red';
+        drawSprites();
+        return;
     }
 
     sendPlayerState(player);

@@ -14,6 +14,7 @@ const html = () => `
 </head>
 
 <body>
+    <noscript>You will need JavaScript to play this game.</noscript>
     <main></main>
 </body>
 
