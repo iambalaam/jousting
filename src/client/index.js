@@ -1,5 +1,16 @@
 const socket = io();
 
+const PLAYER_DIAMETER = 15;
+const PLAYER_RADIUS = PLAYER_DIAMETER / 2;
+const GRAVITY = 0.2;
+const MAX_VAULT = 10;
+const ACCELERATION = 0.3;
+const MAX_SPEED = 6;
+const AIR_MANEUVERABILITY = 0.2;
+const SWORD_LENGTH = 20;
+const FLOOR_HEIGHT = 100;
+const BG_COLOR = [89, 124, 66];
+
 let floor;
 let player;
 let prevSwordAngle;
@@ -39,20 +50,18 @@ socket.on('hit', (hit) => {
     state = GAME_STATE.LOST;
 });
 
+// Setup <canvas/>
 const CANVAS_WIDTH = 800;
 const CANVAS_HEIGHT = 400;
+const main = document.getElementsByTagName('main')[0];
+const canvas = document.createElement('canvas');
+canvas.width = CANVAS_WIDTH;
+canvas.height = CANVAS_HEIGHT;
+main.appendChild(canvas);
+const canvasContext = canvas.getContext('2d');
 
-let BG_COLOR;
-
-const PLAYER_DIAMETER = 15;
-const PLAYER_RADIUS = PLAYER_DIAMETER / 2;
-const GRAVITY = 0.2;
-const MAX_VAULT = 10;
-const ACCELERATION = 0.3;
-const MAX_SPEED = 6;
-const AIR_MANEUVERABILITY = 0.2;
-const SWORD_LENGTH = 20;
-const FLOOR_HEIGHT = 100;
+// Setup game
+setup(canvasContext);
 
 const sendPlayerState = (player) => {
     const { position, velocity, swordTip } = player;
@@ -63,11 +72,10 @@ const sendPlayerState = (player) => {
     });
 }
 
-function setup() {
-    BG_COLOR = color(89, 124, 66);
-    createCanvas(CANVAS_WIDTH, CANVAS_HEIGHT);
-    floor = createSprite(CANVAS_WIDTH / 2, CANVAS_HEIGHT - FLOOR_HEIGHT / 2, CANVAS_WIDTH, FLOOR_HEIGHT);
-    floor.shapeColor = BG_COLOR;
+function setup(ctx) {
+    ctx.fillStyle = `rgb(${BG_COLOR})`;
+    
+    ctx.fillRect(0, CANVAS_HEIGHT - FLOOR_HEIGHT, CANVAS_WIDTH, CANVAS_HEIGHT);
 }
 
 const setupGame = (color) => {
