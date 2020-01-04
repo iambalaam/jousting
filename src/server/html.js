@@ -6,7 +6,6 @@ const html = () => `
 
 <head>
     <title>Joust</title>
-    <link rel="stylesheet" href="/lib/index.css">
 </head>
 
 <body>
