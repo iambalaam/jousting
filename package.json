@@ -6,10 +6,9 @@
     "license": "MIT",
     "scripts": {
         "start": "nodemon",
-        "build": "webpack",
+        "build": "yarn clean:dist && webpack && yarn copy:server",
         "clean:dist": "mkdir -p dist && rm -rf dist/*",
-        "copy:client": "mkdir -p dist/lib && cp -R src/client/* dist/lib",
-        "copy:server": "mkdir -p dist/src/server && cp -R src/server dist/src"
+        "copy:server": "mkdir -p dist && cp -R src/server dist"
     },
     "dependencies": {
         "express": "^4.17.1",

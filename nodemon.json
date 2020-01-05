@@ -2,5 +2,5 @@
     "watch": [
         "src/*"
     ],
-    "exec": "yarn run build && node dist/src/server/index.js"
+    "exec": "yarn build && yarn copy:server && node dist/server/index.js"
 }

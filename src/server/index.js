@@ -9,7 +9,7 @@ const { html } = require('./html');
 
 const PORT = process.env.PORT || 3000;
 const PGK_ROOT = resolve(__dirname, '../../');
-const LIB_DIR = resolve(PGK_ROOT, 'lib');
+const LIB_DIR = resolve(PGK_ROOT, 'dist', 'lib');
 
 const gameEvents = ['player-state', 'hit'];
 const proxyGameEvents = (socket1, socket2) => {
