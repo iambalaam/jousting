@@ -1,16 +1,16 @@
-import { Loading } from "./renderers/loading";
 import { Matchmaking } from "./renderers/matchmaking";
+import { Renderer } from "./renderers";
 
-let gameState = {
-    renderer: new Loading()
+interface AppState {
+    renderer: Renderer
 }
 
-export interface Renderer {
-    draw(ctx: CanvasRenderingContext2D, time: number): void
+export class App {
+    state: AppState;
+    constructor() {
+        this.state = {
+            renderer: new Matchmaking()
+        }
+        this.state.renderer.init();
+    }
 }
-
-export const gameLoop = (ctx: CanvasRenderingContext2D, time: number) => {
-    gameState.renderer.draw(ctx, time);
-}
-
-setTimeout(() => { gameState.renderer = new Matchmaking() }, 3000)

@@ -25,9 +25,11 @@ io.on('connection', (socket) => {
     const id = hash(socket);
     activePlayers[id] = { socket };
     console.debug(`Player joined: ${id}`);
+    socket.broadcast.emit('players-changed', Object.keys(activePlayers));
     socket.on('disconnect', () => {
-        console.debug(`Player left: ${id}`);
         delete activePlayers[id];
+        console.debug(`Player left: ${id}`);
+        socket.broadcast.emit('players-changed', Object.keys(activePlayers));
     });
 });
 

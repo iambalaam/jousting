@@ -8,3 +8,10 @@ body {
     justify-content: center;
     align-items: center;
 }
+
+main {
+    width: 800px;
+    height: 400px;
+    position: absolute;
+    background-color: lightgrey;
+}
