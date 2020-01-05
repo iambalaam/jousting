@@ -39,6 +39,7 @@ io.on('connection', (socket) => {
             const player = activePlayers[playerId];
             if (player) {
                 player.socket.emit(event, id);
+                io.emit('players-changed', Object.keys(activePlayers));
             } else {
                 // player does not exist
             }

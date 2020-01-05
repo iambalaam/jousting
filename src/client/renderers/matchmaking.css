@@ -1,12 +1,22 @@
+.playerlist button {
+    font-size: 30px;
+    width: 450px;
+}
+
 .invite {
-    width: 400px;
+    width: 350px;
+    padding: 4px;
     float: right;
     text-align: center;
     border: 1px solid black;
+    box-sizing: border-box;
     border-radius: 4px;
-    margin: 0 0 2px;;
+    margin: 0 0 2px;
 }
 
 .invite span {
     display: block;
+}
+.invite .playername {
+    font-weight: 800;
 }

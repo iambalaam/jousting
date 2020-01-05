@@ -11,8 +11,7 @@ export class Matchmaking implements Renderer {
         const players = await this.getPlayers() || [];
         this.renderPlayers(players);
         socket.on('players-changed', (players: string[]) => {
-            cleanMain();
-            this.renderPlayers(players);
+            this.updatePlayers(players);
         });
         socket.on('invite-request', (player: string) => {
             this.renderInvite(player);
@@ -34,7 +33,7 @@ export class Matchmaking implements Renderer {
     renderPlayers(players: string[]) {
         const main = document.getElementsByTagName('main')[0];
         const playerList = (
-            <div>{
+            <div className="playerlist">{
                 players
                     // Filter oneself out
                     .filter((player) => player !== socket.id)
@@ -42,7 +41,7 @@ export class Matchmaking implements Renderer {
                         <button
                             className='player'
                             onClick={() => { socket.emit('invite-request', player); }}
-                        >{player}</button>)
+                        >{player} 📥</button>)
             }</div>
         );
         main.appendChild(playerList);
@@ -51,7 +50,8 @@ export class Matchmaking implements Renderer {
     renderInvite(player: string) {
         const invite = (
             <div className="invite">
-                <span>Invite from {player}</span>
+                <span>Invite from:</span>
+                <span class="playername">{player}</span>
                 <button className="accept" onClick={() => {
                     this.updateRenderer(new CanvasRenderer());
                     socket.emit('invite-accept', player);
@@ -69,6 +69,13 @@ export class Matchmaking implements Renderer {
     cleanInvite(inviteElem: HTMLElement) {
         const main = document.getElementsByTagName('main')[0];
         main.removeChild(inviteElem);
+    }
+
+    updatePlayers(players: string[]) {
+        const main = document.getElementsByTagName('main')[0];
+        const playerList = main.getElementsByClassName('playerlist')[0];
+        main.removeChild(playerList);
+        this.renderPlayers(players);
     }
 
     clean() {
