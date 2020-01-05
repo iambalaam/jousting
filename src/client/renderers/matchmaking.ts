@@ -1,6 +1,8 @@
 import { Renderer, cleanMain, CanvasRenderer } from ".";
 import { socket } from "..";
 
+import './matchmaking.css';
+
 export class Matchmaking implements Renderer {
     constructor(private updateRenderer: (renderer: Renderer) => void) { }
 
@@ -12,13 +14,7 @@ export class Matchmaking implements Renderer {
             this.renderPlayers(players);
         });
         socket.on('invite-request', (player: string) => {
-            if (window.confirm(`Join game with ${player}?`)) {
-                // Join game
-                this.updateRenderer(new CanvasRenderer());
-                socket.emit('invite-accept', player);
-            } else {
-                // Do nothing
-            }
+            this.renderInvite(player);
         });
         socket.on('invite-accept', () => {
             this.updateRenderer(new CanvasRenderer());
@@ -49,6 +45,40 @@ export class Matchmaking implements Renderer {
             };
             main.appendChild(elem);
         }
+    }
+
+    renderInvite(player: string) {
+        const invite = document.createElement('div');
+        invite.className = 'invite';
+
+        const text = document.createElement('span');
+        text.textContent = `Invite from ${player}`;
+
+        const accept = document.createElement('button');
+        accept.textContent = 'accept';
+        accept.className = 'accept';
+        accept.onclick = () => {
+            this.updateRenderer(new CanvasRenderer());
+            socket.emit('invite-accept', player);
+        };
+
+        const decline = document.createElement('button');
+        decline.textContent = 'decline';
+        decline.className = 'decline';
+        decline.onclick = () => {
+            this.cleanInvite(invite);
+        };
+
+        invite.appendChild(text);
+        invite.appendChild(accept);
+        invite.appendChild(decline);
+        const main = document.getElementsByTagName('main')[0];
+        main.appendChild(invite);
+    }
+
+    cleanInvite(inviteElem: HTMLElement) {
+        const main = document.getElementsByTagName('main')[0];
+        main.removeChild(inviteElem);
     }
 
     clean() {

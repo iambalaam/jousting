@@ -1,0 +1,12 @@
+.invite {
+    width: 400px;
+    float: right;
+    text-align: center;
+    border: 1px solid black;
+    border-radius: 4px;
+    margin: 0 0 2px;;
+}
+
+.invite span {
+    display: block;
+}
