@@ -1,4 +1,5 @@
 import './index.css';
+import { gameLoop } from './app';
 
 declare const window: Window & { io: () => any; };
 const socket = window.io();
@@ -26,14 +27,10 @@ if (!canvasContext) {
     throw new Error('Could not create canvas context');
 }
 
-// Setup game
-setup(canvasContext);
-
-function setup(ctx: CanvasRenderingContext2D) {
-    ctx.fillStyle = `rgb(${BG_COLOR})`;
-    
-    ctx.fillRect(0, CANVAS_HEIGHT - FLOOR_HEIGHT, CANVAS_WIDTH, CANVAS_HEIGHT);
+const rafLoop: FrameRequestCallback = (time) => {
+    gameLoop(canvasContext, time);
+    window.requestAnimationFrame(rafLoop);
 }
+rafLoop(0);
 
-
-export { };
+export { CANVAS_WIDTH, CANVAS_HEIGHT, canvasContext };
