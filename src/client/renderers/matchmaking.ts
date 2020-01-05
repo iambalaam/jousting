@@ -9,6 +9,17 @@ export class Matchmaking implements Renderer {
             cleanMain();
             this.renderPlayers(players);
         });
+        socket.on('invite-request', (player: string) => {
+            if (window.confirm(`Join game with ${player}?`)) {
+                // Join game
+                socket.emit('invite-accept', player);
+            } else {
+                // Do nothing
+            }
+        });
+        socket.on('invite-accept', () => {
+            console.log('accepted!');
+        });
     }
 
     async getPlayers() {
@@ -23,9 +34,16 @@ export class Matchmaking implements Renderer {
     renderPlayers(players: string[]) {
         const main = document.getElementsByTagName('main')[0];
         for (let player of players) {
-            const elem = document.createElement('div');
+            if (player === socket.id) {
+                // This is me
+                continue;
+            }
+            const elem = document.createElement('button');
             elem.textContent = player;
             elem.className = 'player';
+            elem.onclick = () => {
+                socket.emit('invite-request', player);
+            };
             main.appendChild(elem);
         }
     }
@@ -33,5 +51,7 @@ export class Matchmaking implements Renderer {
     clean() {
         cleanMain();
         socket.off('players-changed');
+        socket.off('invite-request');
+        socket.off('invite-accept');
     }
 }

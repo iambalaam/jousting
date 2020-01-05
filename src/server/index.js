@@ -1,7 +1,6 @@
 const express = require('express');
 const socketIO = require('socket.io');
 const { resolve } = require('path');
-const hash = require('object-hash');
 
 const app = express();
 const server = require('http').createServer(app);
@@ -22,16 +21,31 @@ const proxyGameEvents = (socket1, socket2) => {
 
 const activePlayers = {};
 io.on('connection', (socket) => {
-    const id = hash(socket);
+    const { id } = socket;
     activePlayers[id] = { socket };
     console.debug(`Player joined: ${id}`);
     socket.broadcast.emit('players-changed', Object.keys(activePlayers));
+
     socket.on('disconnect', () => {
         delete activePlayers[id];
         console.debug(`Player left: ${id}`);
         socket.broadcast.emit('players-changed', Object.keys(activePlayers));
     });
+
+    // matchmaking
+    ['invite-request', 'invite-accept'].forEach((event) => {
+        socket.on(event, (playerId) => {
+            console.debug(`${event} from ${socket.id} to ${playerId}`);
+            const player = activePlayers[playerId];
+            if (player) {
+                player.socket.emit(event, id);
+            } else {
+                // player does not exist
+            }
+        });
+    });
 });
+
 
 app.use('/lib', express.static(LIB_DIR));
 
