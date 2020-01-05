@@ -1,7 +1,9 @@
-import { Renderer, cleanMain } from ".";
+import { Renderer, cleanMain, CanvasRenderer } from ".";
 import { socket } from "..";
 
 export class Matchmaking implements Renderer {
+    constructor(private updateRenderer: (renderer: Renderer) => void) { }
+
     async init() {
         const players = await this.getPlayers() || [];
         this.renderPlayers(players);
@@ -12,13 +14,14 @@ export class Matchmaking implements Renderer {
         socket.on('invite-request', (player: string) => {
             if (window.confirm(`Join game with ${player}?`)) {
                 // Join game
+                this.updateRenderer(new CanvasRenderer());
                 socket.emit('invite-accept', player);
             } else {
                 // Do nothing
             }
         });
         socket.on('invite-accept', () => {
-            console.log('accepted!');
+            this.updateRenderer(new CanvasRenderer());
         });
     }
 
