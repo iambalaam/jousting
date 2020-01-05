@@ -2717,6 +2717,11 @@ object-copy@^0.1.0:
     define-property "^0.2.5"
     kind-of "^3.0.3"
 
+object-hash@^2.0.1:
+  version "2.0.1"
+  resolved "https://registry.yarnpkg.com/object-hash/-/object-hash-2.0.1.tgz#cef18a0c940cc60aa27965ecf49b782cbf101d96"
+  integrity sha512-HgcGMooY4JC2PBt9sdUdJ6PMzpin+YtY3r/7wg0uTifP+HJWW8rammseSEHuyt0UeShI183UGssCJqm1bJR7QA==
+
 object-visit@^1.0.0:
   version "1.0.1"
   resolved "https://registry.yarnpkg.com/object-visit/-/object-visit-1.0.1.tgz#f79c4493af0c5377b59fe39d395e41042dd045bb"

@@ -1,6 +1,7 @@
 const express = require('express');
 const socketIO = require('socket.io');
 const { resolve } = require('path');
+const hash = require('object-hash');
 
 const app = express();
 const server = require('http').createServer(app);
@@ -19,28 +20,22 @@ const proxyGameEvents = (socket1, socket2) => {
     }
 }
 
-let unmatchedSocket;
+const activePlayers = {};
 io.on('connection', (socket) => {
-    if (unmatchedSocket) {
-        // Join game
-        unmatchedSocket.emit('initialise', 'blue');
-        socket.emit('initialise', 'orange');
-        proxyGameEvents(unmatchedSocket, socket);
-        unmatchedSocket = undefined;
-    } else {
-        // Wait for game
-        unmatchedSocket = socket;
-
-        // If disconnect before match is made
-        socket.on('disconnect', () => {
-            if (unmatchedSocket === socket) {
-                unmatchedSocket = undefined;
-            }
-        })
-    }
+    const id = hash(socket);
+    activePlayers[id] = { socket };
+    console.debug(`Player joined: ${id}`);
+    socket.on('disconnect', () => {
+        console.debug(`Player left: ${id}`);
+        delete activePlayers[id];
+    });
 });
 
 app.use('/lib', express.static(LIB_DIR));
+
+app.get('/api/players', (_req, res) => {
+    res.send(Object.keys(activePlayers));
+});
 
 app.get('*', (_req, res) => {
     res.send(html());

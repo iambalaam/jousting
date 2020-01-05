@@ -1,5 +1,5 @@
-import { Renderer } from "./app";
-import { backgroundFill } from './drawing';
+import { Renderer } from "../app";
+import { backgroundFill } from '../drawing';
 
 export class Loading implements Renderer {
     draw = (ctx: CanvasRenderingContext2D, time: number) => {
