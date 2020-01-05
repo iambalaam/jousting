@@ -12,12 +12,12 @@ module.exports = {
     },
     mode: 'production',
     resolve: {
-        extensions: ['.js', '.ts']
+        extensions: ['.js', '.ts', '.tsx']
     },
     module: {
         rules: [
             {
-                test: /\.ts$/,
+                test: /\.tsx?$/,
                 use: 'ts-loader'
             },
             {

@@ -1,3 +1,4 @@
+import * as React from 'jsx-dom';
 import { Renderer, cleanMain, CanvasRenderer } from ".";
 import { socket } from "..";
 
@@ -32,46 +33,35 @@ export class Matchmaking implements Renderer {
 
     renderPlayers(players: string[]) {
         const main = document.getElementsByTagName('main')[0];
-        for (let player of players) {
-            if (player === socket.id) {
-                // This is me
-                continue;
-            }
-            const elem = document.createElement('button');
-            elem.textContent = player;
-            elem.className = 'player';
-            elem.onclick = () => {
-                socket.emit('invite-request', player);
-            };
-            main.appendChild(elem);
-        }
+        const playerList = (
+            <div>{
+                players
+                    // Filter oneself out
+                    .filter((player) => player !== socket.id)
+                    .map((player) =>
+                        <button
+                            className='player'
+                            onClick={() => { socket.emit('invite-request', player); }}
+                        >{player}</button>)
+            }</div>
+        );
+        main.appendChild(playerList);
     }
 
     renderInvite(player: string) {
-        const invite = document.createElement('div');
-        invite.className = 'invite';
+        const invite = (
+            <div className="invite">
+                <span>Invite from {player}</span>
+                <button className="accept" onClick={() => {
+                    this.updateRenderer(new CanvasRenderer());
+                    socket.emit('invite-accept', player);
+                }}>accept</button>
+                <button className="decline" onClick={() => {
+                    this.cleanInvite(invite);
+                }}>decline</button>
+            </div>
+        );
 
-        const text = document.createElement('span');
-        text.textContent = `Invite from ${player}`;
-
-        const accept = document.createElement('button');
-        accept.textContent = 'accept';
-        accept.className = 'accept';
-        accept.onclick = () => {
-            this.updateRenderer(new CanvasRenderer());
-            socket.emit('invite-accept', player);
-        };
-
-        const decline = document.createElement('button');
-        decline.textContent = 'decline';
-        decline.className = 'decline';
-        decline.onclick = () => {
-            this.cleanInvite(invite);
-        };
-
-        invite.appendChild(text);
-        invite.appendChild(accept);
-        invite.appendChild(decline);
         const main = document.getElementsByTagName('main')[0];
         main.appendChild(invite);
     }

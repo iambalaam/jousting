@@ -1,6 +1,9 @@
 {
     "compilerOptions": {
         "strict": true,
-        "lib": ["DOM"]
+        "jsx": "react",
+        "lib": [
+            "DOM"
+        ]
     }
 }

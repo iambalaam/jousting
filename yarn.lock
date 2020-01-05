@@ -2204,6 +2204,11 @@ json5@^1.0.1:
   dependencies:
     minimist "^1.2.0"
 
+jsx-dom@^6.4.4:
+  version "6.4.4"
+  resolved "https://registry.yarnpkg.com/jsx-dom/-/jsx-dom-6.4.4.tgz#466a34a321f790b7abe455413e721f14b5d589bc"
+  integrity sha512-YuBjvPFLgy85UFJiK1wMaUXS9C6HDV8Q6/GUwOZv7l6R2os5Ajh8ypqpNvBF5lR36JqBXGwhcgKoXI6WMUkUMA==
+
 kind-of@^3.0.2, kind-of@^3.0.3, kind-of@^3.2.0:
   version "3.2.2"
   resolved "https://registry.yarnpkg.com/kind-of/-/kind-of-3.2.2.tgz#31ea21a734bab9bbb0f32466d893aea51e4a3c64"
