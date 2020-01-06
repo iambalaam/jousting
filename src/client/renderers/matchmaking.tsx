@@ -23,7 +23,7 @@ export class Matchmaking implements Renderer {
 
     async getPlayers() {
         try {
-            const response = await fetch('/api/players');
+            const response = await fetch('/api/matchmaking');
             return await response.json();
         } catch (e) {
             console.error(e);

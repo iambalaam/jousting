@@ -20,38 +20,46 @@ const proxyGameEvents = (socket1, socket2) => {
 }
 
 const activePlayers = {};
+const matchmakingPlayers = {};
 io.on('connection', (socket) => {
     const { id } = socket;
     activePlayers[id] = { socket };
+    matchmakingPlayers[id] = activePlayers[id];
     console.debug(`Player joined: ${id}`);
-    socket.broadcast.emit('players-changed', Object.keys(activePlayers));
+    socket.broadcast.emit('players-changed', Object.keys(matchmakingPlayers));
 
     socket.on('disconnect', () => {
         delete activePlayers[id];
+        delete matchmakingPlayers[id];
         console.debug(`Player left: ${id}`);
-        socket.broadcast.emit('players-changed', Object.keys(activePlayers));
+        socket.broadcast.emit('players-changed', Object.keys(matchmakingPlayers));
     });
 
-    // matchmaking
-    ['invite-request', 'invite-accept'].forEach((event) => {
-        socket.on(event, (playerId) => {
-            console.debug(`${event} from ${socket.id} to ${playerId}`);
-            const player = activePlayers[playerId];
-            if (player) {
-                player.socket.emit(event, id);
-                io.emit('players-changed', Object.keys(activePlayers));
-            } else {
-                // player does not exist
-            }
-        });
+    // Matchmaking
+    socket.on('invite-request', (playerId) => {
+        console.debug(`${id} invited ${playerId}`);
+        const player = matchmakingPlayers[playerId];
+        if (player) {
+            player.socket.emit('invite-request', id);
+        }
+    });
+    socket.on('invite-accept', (playerId) => {
+        console.debug(`${id} accepted ${playerId}'s invitation`);
+        const player = matchmakingPlayers[playerId];
+        if (player) {
+            delete matchmakingPlayers[id];
+            delete matchmakingPlayers[playerId];
+            player.socket.emit('invite-accept', id);
+            io.emit('players-changed', Object.keys(matchmakingPlayers));
+        }
     });
 });
 
 
 app.use('/lib', express.static(LIB_DIR));
 
-app.get('/api/players', (_req, res) => {
-    res.send(Object.keys(activePlayers));
+app.get('/api/matchmaking', (_req, res) => {
+    res.send(Object.keys(matchmakingPlayers));
 });
 
 app.get('*', (_req, res) => {
