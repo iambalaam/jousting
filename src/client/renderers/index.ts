@@ -18,10 +18,15 @@ export const cleanMain = () => {
     }
 };
 
-const CANVAS_WIDTH = 800;
-const CANVAS_HEIGHT = 400;
+export const CANVAS_WIDTH = 800;
+export const CANVAS_HEIGHT = 400;
 
 export class CanvasRenderer implements Renderer {
+    rAFLoop: boolean;
+    constructor() {
+        this.rAFLoop = true;
+    }
+
     init() {
         const main = document.getElementsByTagName('main')[0];
         const canvas = document.createElement('canvas');
@@ -32,18 +37,28 @@ export class CanvasRenderer implements Renderer {
         if (!canvasContext) {
             throw new Error('Could not create canvas context');
         }
-        this.draw(canvasContext);
+        this.drawLoop(canvasContext)(0);
     }
+
+    drawLoop = (ctx: CanvasRenderingContext2D): FrameRequestCallback => {
+        return (time) => {
+            this.draw(ctx, time);
+            if (this.rAFLoop) {
+                window.requestAnimationFrame(this.drawLoop(ctx));
+            }
+        };
+    };
 
     /**
      * Callback for rAF, draws a single frame
      */
-    draw(ctx: CanvasRenderingContext2D) {
+    draw(ctx: CanvasRenderingContext2D, time: number) {
         ctx.fillStyle = 'indianred';
         ctx.fillRect(0, 0, CANVAS_WIDTH, CANVAS_HEIGHT);
     }
 
     clean() {
+        this.rAFLoop = false;
         cleanMain();
     }
-}
+};

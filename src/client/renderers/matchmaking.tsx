@@ -1,8 +1,9 @@
 import * as React from 'jsx-dom';
-import { Renderer, cleanMain, CanvasRenderer } from ".";
+import { Renderer, cleanMain } from ".";
 import { socket } from "..";
 
 import './matchmaking.css';
+import { Game } from './game';
 
 export class Matchmaking implements Renderer {
     constructor(private updateRenderer: (renderer: Renderer) => void) { }
@@ -17,7 +18,7 @@ export class Matchmaking implements Renderer {
             this.renderInvite(player);
         });
         socket.on('invite-accept', () => {
-            this.updateRenderer(new CanvasRenderer());
+            this.updateRenderer(new Game());
         });
     }
 
@@ -53,7 +54,7 @@ export class Matchmaking implements Renderer {
                 <span>Invite from:</span>
                 <span class="playername">{player}</span>
                 <button className="accept" onClick={() => {
-                    this.updateRenderer(new CanvasRenderer());
+                    this.updateRenderer(new Game());
                     socket.emit('invite-accept', player);
                 }}>accept</button>
                 <button className="decline" onClick={() => {
