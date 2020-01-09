@@ -2,7 +2,7 @@ import { CanvasRenderer, CANVAS_WIDTH, CANVAS_HEIGHT } from '.';
 
 const spinnerRadius = 150;
 
-export class Game extends CanvasRenderer {
+export class Debug extends CanvasRenderer {
 
     draw(ctx: CanvasRenderingContext2D, time: number) {
         // Fill the background

@@ -1,5 +1,6 @@
 import { Matchmaking } from "./renderers/matchmaking";
 import { Renderer } from "./renderers";
+import { Debug } from "./renderers/debug";
 
 interface AppState {
     renderer: Renderer;
@@ -8,9 +9,10 @@ interface AppState {
 export class App {
     state: AppState;
     constructor() {
-        this.state = {
-            renderer: new Matchmaking(this.updateRenderer)
-        };
+        const renderer = new URLSearchParams(window.location.search).has('debug')
+            ? new Debug()
+            : new Matchmaking(this.updateRenderer);
+        this.state = { renderer };
         this.state.renderer.init();
     }
 

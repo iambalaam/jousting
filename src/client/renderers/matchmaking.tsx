@@ -3,7 +3,7 @@ import { Renderer, cleanMain } from ".";
 import { socket } from "..";
 
 import './matchmaking.css';
-import { Game } from './game';
+import { Debug } from './debug';
 
 export class Matchmaking implements Renderer {
     constructor(private updateRenderer: (renderer: Renderer) => void) { }
@@ -18,7 +18,7 @@ export class Matchmaking implements Renderer {
             this.renderInvite(player);
         });
         socket.on('invite-accept', () => {
-            this.updateRenderer(new Game());
+            this.updateRenderer(new Debug());
         });
     }
 
@@ -54,7 +54,7 @@ export class Matchmaking implements Renderer {
                 <span>Invite from:</span>
                 <span class="playername">{player}</span>
                 <button className="accept" onClick={() => {
-                    this.updateRenderer(new Game());
+                    this.updateRenderer(new Debug());
                     socket.emit('invite-accept', player);
                 }}>accept</button>
                 <button className="decline" onClick={() => {
