@@ -9,7 +9,7 @@ interface AppState {
 export class App {
     state: AppState;
     constructor() {
-        const renderer = new URLSearchParams(window.location.search).has('debug')
+        const renderer = new URLSearchParams(window.location.search).has('forceDebug')
             ? new Debug()
             : new Matchmaking(this.updateRenderer);
         this.state = { renderer };

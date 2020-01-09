@@ -30,25 +30,8 @@ export class CanvasRenderer implements Renderer {
     ping?: number;
     constructor() {
         this.rAFLoop = true;
-        this.debug = new URLSearchParams(window.location.search).has('debug');
-        this.lastTime = 0;
-    }
-
-    init() {
-        // Setup <canvas>
-        const main = document.getElementsByTagName('main')[0];
-        const canvas = document.createElement('canvas');
-        canvas.width = CANVAS_WIDTH;
-        canvas.height = CANVAS_HEIGHT;
-        main.appendChild(canvas);
-
-        // Create context
-        const canvasContext = canvas.getContext('2d');
-        if (!canvasContext) {
-            throw new Error('Could not create canvas context');
-        }
-
-        // Attach listeners
+        const params = new URLSearchParams(window.location.search);
+        this.debug = params.has('debug') || params.has('forceDebug');
         if (this.debug) {
             socket.on('debug-pong', (time: number) => {
                 this.ping = (Date.now() - time) / 2;
@@ -56,9 +39,25 @@ export class CanvasRenderer implements Renderer {
             });
             socket.emit('debug-ping', Date.now());
         }
+        this.lastTime = 0;
+    }
 
-        // Start draw loop
-        this.drawLoop(canvasContext)(0);
+    init() {
+        const ctx = this.createCanvas();
+        this.drawLoop(ctx)(0);
+    }
+
+    createCanvas(): CanvasRenderingContext2D {
+        const main = document.getElementsByTagName('main')[0];
+        const canvas = document.createElement('canvas');
+        canvas.width = CANVAS_WIDTH;
+        canvas.height = CANVAS_HEIGHT;
+        main.appendChild(canvas);
+        const canvasContext = canvas.getContext('2d');
+        if (!canvasContext) {
+            throw new Error('Could not create canvas context');
+        }
+        return canvasContext;
     }
 
     drawLoop = (ctx: CanvasRenderingContext2D): FrameRequestCallback => {
@@ -100,6 +99,7 @@ export class CanvasRenderer implements Renderer {
 
     clean() {
         this.rAFLoop = false;
+        socket.off('debug-pong');
         cleanMain();
     }
 };
