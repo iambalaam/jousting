@@ -53,8 +53,12 @@ io.on('connection', (socket) => {
             io.emit('players-changed', Object.keys(matchmakingPlayers));
         }
     });
-});
 
+    // Debug
+    socket.on('debug-ping', (...args) => {
+        socket.emit('debug-pong', args);
+    });
+});
 
 app.use('/lib', express.static(LIB_DIR));
 
