@@ -7,18 +7,19 @@ const FLOOR_HEIGHT = 300;
 // Player Constants
 const PLAYER_DIAMETER = 15;
 const PLAYER_RADIUS = PLAYER_DIAMETER / 2;
-
-
+const PLAYER_SPEED = 5;
 
 export interface Vector { x: number, y: number; }
 export interface PlayerState {
     color: string,
+    grounded: boolean;
     position: Vector,
     velocity: Vector;
 }
 
 const player: PlayerState = {
     color: 'indianred',
+    grounded: false,
     position: { x: CANVAS_WIDTH / 2, y: CANVAS_HEIGHT / 2 },
     velocity: { x: 0, y: 0 }
 };
@@ -100,11 +101,19 @@ export class Game extends CanvasRenderer {
         player.velocity.y += (GRAVITY * time);
         player.position.x += player.velocity.x;
         player.position.y += player.velocity.y;
+        if (this.activePointer && this.pointer) {
+            // Move on input
+            player.velocity.x = PLAYER_SPEED * Math.sign(this.pointer.x - player.position.x);
+        } else if (player.grounded) {
+            // Slow down if no input
+            player.velocity.x *= PLAYER_SPEED * time;
+        }
 
         // Calculate collisions
         if (player.position.y + PLAYER_RADIUS > FLOOR_HEIGHT) {
             player.velocity.y = 0;
             player.position.y = FLOOR_HEIGHT - PLAYER_RADIUS;
+            player.grounded = true;
         }
 
         //Draw
@@ -113,6 +122,7 @@ export class Game extends CanvasRenderer {
         if (this.pointer && this.activePointer) {
             this.drawPlayer(ctx, {
                 color: 'white',
+                grounded: false,
                 position: this.pointer,
                 velocity: this.pointer
             });
