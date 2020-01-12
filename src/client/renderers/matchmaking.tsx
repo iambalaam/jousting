@@ -6,7 +6,16 @@ import './matchmaking.css';
 import { Game } from './game';
 
 export class Matchmaking implements Renderer {
-    constructor(private updateRenderer: (renderer: Renderer) => void) { }
+    cleanActions: Array<() => void>;
+    constructor(private updateRenderer: (rendererConstructor: any) => void) {
+        this.cleanActions = [() => {
+            socket.off('players-changed');
+            socket.off('invite-request');
+            socket.off('invite-accept');
+            cleanMain();
+        }];
+        this.init();
+    }
 
     async init() {
         const players = await this.getPlayers() || [];
@@ -18,7 +27,7 @@ export class Matchmaking implements Renderer {
             this.renderInvite(player);
         });
         socket.on('invite-accept', () => {
-            this.updateRenderer(new Game());
+            this.updateRenderer(Game);
         });
     }
 
@@ -54,7 +63,7 @@ export class Matchmaking implements Renderer {
                 <span>Invite from:</span>
                 <span class="playername">{player}</span>
                 <button className="accept" onClick={() => {
-                    this.updateRenderer(new Game());
+                    this.updateRenderer(Game);
                     socket.emit('invite-accept', player);
                 }}>accept</button>
                 <button className="decline" onClick={() => {
@@ -77,12 +86,5 @@ export class Matchmaking implements Renderer {
         const playerList = main.getElementsByClassName('playerlist')[0];
         main.removeChild(playerList);
         this.renderPlayers(players);
-    }
-
-    clean() {
-        cleanMain();
-        socket.off('players-changed');
-        socket.off('invite-request');
-        socket.off('invite-accept');
     }
 }

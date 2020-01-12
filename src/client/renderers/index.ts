@@ -1,16 +1,18 @@
 import { socket } from "..";
+import { initDebugPing, cleanDebugPing } from "../debug-ping";
 
 export interface Renderer {
     /**
      * This is responsible for taking control of the <main/> tag
      * It will also need to rAF in a loop
      */
-    init(): void;
+    // TODO: how do I type new? 
 
     /**
-     * This should remove all event listeners and clean the <main/> tag
+     * This will hold all actions that must be done to clean up
+     * This will be called in reverse order
      */
-    clean(): void;
+    cleanActions: Array<() => void>;
 }
 
 export const cleanMain = () => {
@@ -28,23 +30,21 @@ export class CanvasRenderer implements Renderer {
     debug: boolean;
     lastTime: number;
     ping?: number;
+    ctx: CanvasRenderingContext2D;
+    cleanActions: Array<() => void>;
+
     constructor() {
+        this.cleanActions = [cleanMain, () => { this.rAFLoop = false; }];
         this.rAFLoop = true;
         const params = new URLSearchParams(window.location.search);
         this.debug = params.has('debug') || params.has('forceDebug');
         if (this.debug) {
-            socket.on('debug-pong', (time: number) => {
-                this.ping = (Date.now() - time) / 2;
-                socket.emit('debug-ping', Date.now());
-            });
-            socket.emit('debug-ping', Date.now());
+            initDebugPing((ping: number) => { this.ping = ping; });
+            this.cleanActions.push(cleanDebugPing);
         }
         this.lastTime = 0;
-    }
-
-    init() {
-        const ctx = this.createCanvas();
-        this.drawLoop(ctx)(0);
+        this.ctx = this.createCanvas();
+        this.drawLoop(this.ctx)(0);
     }
 
     createCanvas(): CanvasRenderingContext2D {
@@ -62,10 +62,11 @@ export class CanvasRenderer implements Renderer {
 
     drawLoop = (ctx: CanvasRenderingContext2D): FrameRequestCallback => {
         return (time) => {
-            this.draw(ctx, time);
-            this.debug && this.drawDebug(ctx, time);
+            const frameDuration = time - this.lastTime;
+            this.lastTime = time;
+            this.draw(ctx, frameDuration);
             if (this.debug) {
-
+                this.drawDebug(ctx, frameDuration);
             }
             if (this.rAFLoop) {
                 window.requestAnimationFrame(this.drawLoop(ctx));
@@ -76,30 +77,22 @@ export class CanvasRenderer implements Renderer {
     /**
      * Callback for rAF, draws a single frame
      */
-    draw(ctx: CanvasRenderingContext2D, time: number) {
+    draw(ctx: CanvasRenderingContext2D, _frameDuration: number) {
         ctx.fillStyle = 'indianred';
         ctx.fillRect(0, 0, CANVAS_WIDTH, CANVAS_HEIGHT);
     }
 
-    drawDebug(ctx: CanvasRenderingContext2D, time: number) {
+    drawDebug(ctx: CanvasRenderingContext2D, frameDuration: number) {
         ctx.fillStyle = 'black';
         ctx.font = '20px sans-serif';
         // FPS
-        const frameDuration = time - this.lastTime;
         if (frameDuration) {
             const fps = (1000 / frameDuration);
             ctx.fillText(`fps: ${fps.toFixed(0)}`, 20, 20);
         }
-        this.lastTime = time;
         // PING
         if (this.ping) {
             ctx.fillText(`ping: ${this.ping.toFixed(0)}`, 20, 40);
         }
-    }
-
-    clean() {
-        this.rAFLoop = false;
-        socket.off('debug-pong');
-        cleanMain();
     }
 };

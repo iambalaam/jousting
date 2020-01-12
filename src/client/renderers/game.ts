@@ -1,13 +1,14 @@
 import { CanvasRenderer, CANVAS_WIDTH, CANVAS_HEIGHT } from ".";
 
 // Game Constants
-const GRAVITY = 3e-3;
+const GRAVITY = 3e-2;
 const FLOOR_HEIGHT = 300;
 
 // Player Constants
 const PLAYER_DIAMETER = 15;
 const PLAYER_RADIUS = PLAYER_DIAMETER / 2;
 const PLAYER_SPEED = 5;
+const PLAYER_ACCN = 0.8; // 0-1 where 1 is instantly new speed
 
 export interface Vector { x: number, y: number; }
 export interface PlayerState {
@@ -28,10 +29,10 @@ export class Game extends CanvasRenderer {
     pointer?: Vector = undefined;
     activePointer?: boolean = undefined;
 
-    init() {
-        const ctx = this.createCanvas();
-        this.attachListeners(ctx);
-        this.drawLoop(ctx)(0);
+    constructor() {
+        super();
+        this.attachListeners(this.ctx);
+        this.drawLoop(this.ctx)(0);
     }
 
     getPointerPosition(ctx: CanvasRenderingContext2D, v: Vector): Vector {
@@ -96,17 +97,19 @@ export class Game extends CanvasRenderer {
         ctx.fillRect(x - PLAYER_RADIUS, y - PLAYER_RADIUS, PLAYER_DIAMETER, PLAYER_DIAMETER);
     }
 
-    draw(ctx: CanvasRenderingContext2D, time: number) {
+    draw(ctx: CanvasRenderingContext2D, frameDuration: number) {
         // Perform physics
-        player.velocity.y += (GRAVITY * time);
+        player.velocity.y += (GRAVITY * frameDuration);
         player.position.x += player.velocity.x;
         player.position.y += player.velocity.y;
         if (this.activePointer && this.pointer) {
             // Move on input
-            player.velocity.x = PLAYER_SPEED * Math.sign(this.pointer.x - player.position.x);
+            player.velocity.x =
+                (PLAYER_ACCN * (PLAYER_SPEED * Math.sign(this.pointer.x - player.position.x))) +
+                ((1 - PLAYER_ACCN) * (player.velocity.x));
         } else if (player.grounded) {
             // Slow down if no input
-            player.velocity.x *= PLAYER_SPEED * time;
+            player.velocity.x *= PLAYER_ACCN; // This needs to be an equation based on frameDuration
         }
 
         // Calculate collisions

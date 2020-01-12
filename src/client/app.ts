@@ -1,7 +1,6 @@
 import { Matchmaking } from "./renderers/matchmaking";
 import { Renderer } from "./renderers";
 import { Debug } from "./renderers/debug";
-import { Game } from "./renderers/game";
 
 interface AppState {
     renderer: Renderer;
@@ -11,16 +10,16 @@ export class App {
     state: AppState;
     constructor() {
         const renderer = new URLSearchParams(window.location.search).has('forceDebug')
-            ? new Debug()
-            // : new Matchmaking(this.updateRenderer);
-            : new Game();
+            ? new Debug(this.updateRenderer)
+            : new Matchmaking(this.updateRenderer);
         this.state = { renderer };
-        this.state.renderer.init();
     }
 
-    updateRenderer = (renderer: Renderer) => {
-        this.state.renderer.clean();
-        this.state.renderer = renderer;
-        this.state.renderer.init();
+    // TODO: type rendererConstructor properly
+    updateRenderer = (rendererConstructor: any) => {
+        this.state.renderer.cleanActions.forEach((action) => {
+            action();
+        });
+        this.state.renderer = new rendererConstructor(this.updateRenderer);
     };
 }
