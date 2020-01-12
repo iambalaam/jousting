@@ -1,4 +1,3 @@
-import { socket } from "..";
 import { initDebugPing, cleanDebugPing } from "../debug-ping";
 
 export interface Renderer {

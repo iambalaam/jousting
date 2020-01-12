@@ -32,7 +32,6 @@ export class Game extends CanvasRenderer {
     constructor() {
         super();
         this.attachListeners(this.ctx);
-        this.drawLoop(this.ctx)(0);
     }
 
     getPointerPosition(ctx: CanvasRenderingContext2D, v: Vector): Vector {
