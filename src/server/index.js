@@ -1,4 +1,5 @@
 const express = require('express');
+const bodyParser = require('body-parser')
 const socketIO = require('socket.io');
 const { resolve } = require('path');
 
@@ -21,18 +22,24 @@ const proxyGameEvents = (socket1, socket2) => {
 
 const activePlayers = {};
 const matchmakingPlayers = {};
+const registeredNames = new Set();
 io.on('connection', (socket) => {
     const { id } = socket;
     activePlayers[id] = { socket };
     matchmakingPlayers[id] = activePlayers[id];
     console.debug(`Player joined: ${id}`);
-    socket.broadcast.emit('players-changed', Object.keys(matchmakingPlayers));
+    const players = Object.keys(matchmakingPlayers)
+        .map((id) => ({ id, name: activePlayers[id].name }));
+    socket.broadcast.emit('players-changed', players);
 
     socket.on('disconnect', () => {
+        const name = activePlayers[id].name;
+        registeredNames.clear(name);
         delete activePlayers[id];
         delete matchmakingPlayers[id];
         console.debug(`Player left: ${id}`);
-        socket.broadcast.emit('players-changed', Object.keys(matchmakingPlayers));
+        socket.broadcast.emit('players-changed', Object.keys(matchmakingPlayers)
+            .map((id) => ({ id, name: activePlayers[id].name })));
     });
 
     // Matchmaking
@@ -40,16 +47,18 @@ io.on('connection', (socket) => {
         console.debug(`${id} invited ${playerId}`);
         const player = matchmakingPlayers[playerId];
         if (player) {
-            player.socket.emit('invite-request', id);
+            const { name } = activePlayers[id];
+            player.socket.emit('invite-request', { id, name });
         }
     });
     socket.on('invite-accept', (playerId) => {
         console.debug(`${id} accepted ${playerId}'s invitation`);
         const player = matchmakingPlayers[playerId];
+        const name = activePlayers[playerId].name;
         if (player) {
             delete matchmakingPlayers[id];
             delete matchmakingPlayers[playerId];
-            player.socket.emit('invite-accept', id);
+            player.socket.emit('invite-accept', { id, name });
             io.emit('players-changed', Object.keys(matchmakingPlayers));
         }
     });
@@ -62,9 +71,29 @@ io.on('connection', (socket) => {
 
 app.use('/lib', express.static(LIB_DIR));
 
+app.use('/api', bodyParser.json());
 app.get('/api/matchmaking', (_req, res) => {
-    res.send(Object.keys(matchmakingPlayers));
+    res.send(Object.keys(matchmakingPlayers).map((id) => ({ id, name: activePlayers[id].name })));
 });
+
+app.post('/api/setPlayerName', (req, res) => {
+    const { playerId, name } = req.body;
+    if (!playerId) return res.status(400).send('playerId is missing');
+    if (!name) return res.status(400).send('name is missing');
+    if (typeof name !== 'string') return res.status(400).send('name must be a string');
+    const player = activePlayers[playerId]
+    if (!player) return res.status(400).send(`player ${playerId} does not exist`);
+    if (player.name) return res.status(400).send(`player ${playerId} has already set their name`);
+    if (registeredNames.has(name)) return res.status(400).send(`name ${name} is already taken`);
+
+    console.debug(`${playerId} set their name as '${name}'`);
+    player.name = name;
+    registeredNames.add(name);
+    res.sendStatus(200);
+    const players = Object.keys(matchmakingPlayers)
+        .map((id) => ({ id, name: activePlayers[id].name }));
+    io.emit('players-changed', players);
+})
 
 app.get('*', (_req, res) => {
     res.send(html());
