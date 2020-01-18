@@ -4,7 +4,7 @@ const spinnerRadius = 150;
 
 export class Debug extends CanvasRenderer {
     time: number;
-    constructor(_updateRenderer: (rendererConstructor: any) => void) {
+    constructor(_updateRenderer: (rendererConstructor: any, _opts: any) => void, _opts: any) {
         super();
         this.time = 0;
     }

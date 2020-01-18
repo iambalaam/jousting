@@ -29,7 +29,7 @@ export class Game extends CanvasRenderer {
     pointer?: Vector = undefined;
     activePointer?: boolean = undefined;
 
-    constructor() {
+    constructor(private updateRenderer: (rendererConstructor: any, _opts: any) => void, _opts: any) {
         super();
         this.attachListeners(this.ctx);
     }

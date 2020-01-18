@@ -76,19 +76,19 @@ app.get('/api/matchmaking', (_req, res) => {
     res.send(Object.keys(matchmakingPlayers).map((id) => ({ id, name: activePlayers[id].name })));
 });
 
-app.post('/api/setPlayerName', (req, res) => {
-    const { playerId, name } = req.body;
+app.post('/api/setUsername', (req, res) => {
+    const { playerId, username } = req.body;
     if (!playerId) return res.status(400).send('playerId is missing');
-    if (!name) return res.status(400).send('name is missing');
-    if (typeof name !== 'string') return res.status(400).send('name must be a string');
+    if (!username) return res.status(400).send('name is missing');
+    if (typeof username !== 'string') return res.status(400).send('name must be a string');
     const player = activePlayers[playerId]
     if (!player) return res.status(400).send(`player ${playerId} does not exist`);
     if (player.name) return res.status(400).send(`player ${playerId} has already set their name`);
-    if (registeredNames.has(name)) return res.status(400).send(`name ${name} is already taken`);
+    if (registeredNames.has(username)) return res.status(400).send(`name ${username} is already taken`);
 
-    console.debug(`${playerId} set their name as '${name}'`);
-    player.name = name;
-    registeredNames.add(name);
+    console.debug(`${playerId} set their name as '${username}'`);
+    player.name = username;
+    registeredNames.add(username);
     res.sendStatus(200);
     const players = Object.keys(matchmakingPlayers)
         .map((id) => ({ id, name: activePlayers[id].name }));

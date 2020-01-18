@@ -12,7 +12,7 @@ export interface Player {
 
 export class Matchmaking implements Renderer {
     cleanActions: Array<() => void>;
-    constructor(private updateRenderer: (rendererConstructor: any) => void) {
+    constructor(private updateRenderer: (rendererConstructor: any, _opts: any) => void, _opts: any) {
         this.cleanActions = [() => {
             socket.off('players-changed');
             socket.off('invite-request');
@@ -32,7 +32,7 @@ export class Matchmaking implements Renderer {
             this.renderInvite(player);
         });
         socket.on('invite-accept', () => {
-            this.updateRenderer(Game);
+            this.updateRenderer(Game, {});
         });
     }
 
@@ -68,7 +68,7 @@ export class Matchmaking implements Renderer {
                 <span>Invite from:</span>
                 <span class="playername">{player.name || player.id}</span>
                 <button className="accept" onClick={() => {
-                    this.updateRenderer(Game);
+                    this.updateRenderer(Game, {});
                     socket.emit('invite-accept', player.id);
                 }}>accept</button>
                 <button className="decline" onClick={() => {
