@@ -1,5 +1,5 @@
 const express = require('express');
-const bodyParser = require('body-parser')
+const bodyParser = require('body-parser');
 const socketIO = require('socket.io');
 const { resolve } = require('path');
 
@@ -18,7 +18,7 @@ const proxyGameEvents = (socket1, socket2) => {
         socket1.on(event, (payload) => socket2.emit(event, payload));
         socket2.on(event, (payload) => socket1.emit(event, payload));
     }
-}
+};
 
 const activePlayers = {};
 const matchmakingPlayers = {};
@@ -34,7 +34,7 @@ io.on('connection', (socket) => {
 
     socket.on('disconnect', () => {
         const name = activePlayers[id].name;
-        registeredNames.clear(name);
+        registeredNames.delete(name);
         delete activePlayers[id];
         delete matchmakingPlayers[id];
         console.debug(`Player left: ${id}`);
@@ -81,7 +81,7 @@ app.post('/api/setUsername', (req, res) => {
     if (!playerId) return res.status(400).send('playerId is missing');
     if (!username) return res.status(400).send('name is missing');
     if (typeof username !== 'string') return res.status(400).send('name must be a string');
-    const player = activePlayers[playerId]
+    const player = activePlayers[playerId];
     if (!player) return res.status(400).send(`player ${playerId} does not exist`);
     if (player.name) return res.status(400).send(`player ${playerId} has already set their name`);
     if (registeredNames.has(username)) return res.status(400).send(`name ${username} is already taken`);
@@ -93,7 +93,7 @@ app.post('/api/setUsername', (req, res) => {
     const players = Object.keys(matchmakingPlayers)
         .map((id) => ({ id, name: activePlayers[id].name }));
     io.emit('players-changed', players);
-})
+});
 
 app.get('*', (_req, res) => {
     res.send(html());
