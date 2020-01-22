@@ -7,15 +7,17 @@ const FLOOR_HEIGHT = 300;
 // Player Constants
 const PLAYER_DIAMETER = 15;
 const PLAYER_RADIUS = PLAYER_DIAMETER / 2;
-const PLAYER_SPEED = 5;
+const PLAYER_SPEED = 7;
 const PLAYER_ACCN = 0.8; // 0-1 where 1 is instantly new speed
 const PLAYER_JUMP = 10;
+const PLAYER_SMALLEST_MOVE_DELTA = 20;
 
 export interface Vector { x: number, y: number; }
 export interface PlayerState {
     color: string,
     grounded: boolean;
     isJumping: boolean;
+    sliding: boolean;
     position: Vector,
     velocity: Vector;
 }
@@ -24,6 +26,7 @@ const player: PlayerState = {
     color: 'indianred',
     grounded: false,
     isJumping: false,
+    sliding: false,
     position: { x: CANVAS_WIDTH / 2, y: CANVAS_HEIGHT / 2 },
     velocity: { x: 0, y: 0 }
 };
@@ -112,14 +115,21 @@ export class Game extends CanvasRenderer {
             player.isJumping = false;
         }
 
-        if (this.activePointer && this.pointer) {
-            // Move on input
-            player.velocity.x =
-                (PLAYER_ACCN * (PLAYER_SPEED * Math.sign(this.pointer.x - player.position.x))) +
-                ((1 - PLAYER_ACCN) * (player.velocity.x));
-        } else if (player.grounded) {
-            // Slow down if no input
+        // Move on input
+        if (this.activePointer && this.pointer && player.grounded) {
+            if (Math.abs(this.pointer.x - player.position.x) > PLAYER_SMALLEST_MOVE_DELTA) {
+                player.velocity.x =
+                    (PLAYER_ACCN * (PLAYER_SPEED * Math.sign(this.pointer.x - player.position.x))) +
+                    ((1 - PLAYER_ACCN) * (player.velocity.x));
+            }
+        }
+
+        // Slow down on the ground or walls
+        if (player.grounded) {
             player.velocity.x *= PLAYER_ACCN; // This needs to be an equation based on frameDuration
+        }
+        if (player.sliding) {
+            player.velocity.y *= PLAYER_ACCN;
         }
 
         // Perform physics
@@ -138,10 +148,13 @@ export class Game extends CanvasRenderer {
         if (player.position.x <= 0 + PLAYER_RADIUS) {
             player.velocity.x = 0;
             player.position.x = 0 + PLAYER_RADIUS;
-        }
-        if (player.position.x >= CANVAS_WIDTH - PLAYER_RADIUS) {
+            player.sliding = true;
+        } else if (player.position.x >= CANVAS_WIDTH - PLAYER_RADIUS) {
             player.velocity.x = 0;
             player.position.x = CANVAS_WIDTH - PLAYER_RADIUS;
+            player.sliding = true;
+        } else {
+            player.sliding = false;
         }
 
         //Draw
@@ -152,6 +165,7 @@ export class Game extends CanvasRenderer {
                 color: 'white',
                 grounded: false,
                 isJumping: false,
+                sliding: false,
                 position: this.pointer,
                 velocity: this.pointer
             });
