@@ -21,6 +21,7 @@ export const cleanMain = () => {
     }
 };
 
+export interface Vector { x: number, y: number; }
 export const CANVAS_WIDTH = 800;
 export const CANVAS_HEIGHT = 400;
 

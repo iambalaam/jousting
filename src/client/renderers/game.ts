@@ -1,4 +1,5 @@
-import { CanvasRenderer, CANVAS_WIDTH, CANVAS_HEIGHT } from ".";
+import { CanvasRenderer, CANVAS_WIDTH, CANVAS_HEIGHT, Vector } from ".";
+import { PlayerState, createPlayer } from '../player';
 
 // Game Constants
 const GRAVITY = 3e-2;
@@ -12,24 +13,11 @@ const PLAYER_ACCN = 0.8; // 0-1 where 1 is instantly new speed
 const PLAYER_JUMP = 10;
 const PLAYER_SMALLEST_MOVE_DELTA = 20;
 
-export interface Vector { x: number, y: number; }
-export interface PlayerState {
-    color: string,
-    grounded: boolean;
-    isJumping: boolean;
-    sliding: boolean;
-    position: Vector,
-    velocity: Vector;
-}
 
-const player: PlayerState = {
-    color: 'indianred',
-    grounded: false,
-    isJumping: false,
-    sliding: false,
-    position: { x: CANVAS_WIDTH / 2, y: CANVAS_HEIGHT / 2 },
-    velocity: { x: 0, y: 0 }
-};
+const player = createPlayer({
+    team: 'indianred',
+    position: { x: CANVAS_WIDTH / 2, y: CANVAS_HEIGHT / 2 }
+});
 
 export class Game extends CanvasRenderer {
     pointer?: Vector = undefined;
@@ -161,14 +149,7 @@ export class Game extends CanvasRenderer {
         this.drawBackground(ctx);
         this.drawPlayer(ctx, player);
         if (this.pointer && this.activePointer) {
-            this.drawPlayer(ctx, {
-                color: 'white',
-                grounded: false,
-                isJumping: false,
-                sliding: false,
-                position: this.pointer,
-                velocity: this.pointer
-            });
+            this.drawPlayer(ctx, createPlayer({ team: 'white', position: this.pointer }));
         }
     }
 }
