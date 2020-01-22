@@ -9,11 +9,13 @@ const PLAYER_DIAMETER = 15;
 const PLAYER_RADIUS = PLAYER_DIAMETER / 2;
 const PLAYER_SPEED = 5;
 const PLAYER_ACCN = 0.8; // 0-1 where 1 is instantly new speed
+const PLAYER_JUMP = 10;
 
 export interface Vector { x: number, y: number; }
 export interface PlayerState {
     color: string,
     grounded: boolean;
+    isJumping: boolean;
     position: Vector,
     velocity: Vector;
 }
@@ -21,6 +23,7 @@ export interface PlayerState {
 const player: PlayerState = {
     color: 'indianred',
     grounded: false,
+    isJumping: false,
     position: { x: CANVAS_WIDTH / 2, y: CANVAS_HEIGHT / 2 },
     velocity: { x: 0, y: 0 }
 };
@@ -81,6 +84,11 @@ export class Game extends CanvasRenderer {
                 this.pointer = undefined;
             }
         });
+        window.addEventListener('keydown', ({ key }) => {
+            if (key === ' ') {
+                player.isJumping = true;
+            }
+        });
     }
 
     drawBackground(ctx: CanvasRenderingContext2D) {
@@ -97,10 +105,13 @@ export class Game extends CanvasRenderer {
     }
 
     draw(ctx: CanvasRenderingContext2D, frameDuration: number) {
-        // Perform physics
-        player.velocity.y += (GRAVITY * frameDuration);
-        player.position.x += player.velocity.x;
-        player.position.y += player.velocity.y;
+        // Move from input
+        if (player.isJumping) {
+            player.velocity.y = -PLAYER_JUMP;
+            player.grounded = false;
+            player.isJumping = false;
+        }
+
         if (this.activePointer && this.pointer) {
             // Move on input
             player.velocity.x =
@@ -111,11 +122,26 @@ export class Game extends CanvasRenderer {
             player.velocity.x *= PLAYER_ACCN; // This needs to be an equation based on frameDuration
         }
 
+        // Perform physics
+        player.velocity.y += (GRAVITY * frameDuration);
+        player.position.x += player.velocity.x;
+        player.position.y += player.velocity.y;
+
         // Calculate collisions
+        // floor
         if (player.position.y + PLAYER_RADIUS > FLOOR_HEIGHT) {
             player.velocity.y = 0;
             player.position.y = FLOOR_HEIGHT - PLAYER_RADIUS;
             player.grounded = true;
+        }
+        // walls
+        if (player.position.x <= 0 + PLAYER_RADIUS) {
+            player.velocity.x = 0;
+            player.position.x = 0 + PLAYER_RADIUS;
+        }
+        if (player.position.x >= CANVAS_WIDTH - PLAYER_RADIUS) {
+            player.velocity.x = 0;
+            player.position.x = CANVAS_WIDTH - PLAYER_RADIUS;
         }
 
         //Draw
@@ -125,6 +151,7 @@ export class Game extends CanvasRenderer {
             this.drawPlayer(ctx, {
                 color: 'white',
                 grounded: false,
+                isJumping: false,
                 position: this.pointer,
                 velocity: this.pointer
             });
