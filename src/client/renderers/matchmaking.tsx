@@ -33,6 +33,7 @@ export class Matchmaking implements Renderer {
         });
         socket.on('invite-accept', () => {
             this.updateRenderer(Game, {});
+            (window as any).socket = socket;
         });
     }
 

@@ -7,18 +7,11 @@ const app = express();
 const server = require('http').createServer(app);
 const io = socketIO(server);
 const { html } = require('./html');
+const { joinGame } = require('./game');
 
 const PORT = process.env.PORT || 3000;
 const PGK_ROOT = resolve(__dirname, '../../');
 const LIB_DIR = resolve(PGK_ROOT, 'dist', 'lib');
-
-const gameEvents = ['player-state', 'hit'];
-const proxyGameEvents = (socket1, socket2) => {
-    for (const event of gameEvents) {
-        socket1.on(event, (payload) => socket2.emit(event, payload));
-        socket2.on(event, (payload) => socket1.emit(event, payload));
-    }
-};
 
 const activePlayers = {};
 const matchmakingPlayers = {};
@@ -56,6 +49,7 @@ io.on('connection', (socket) => {
         const player = matchmakingPlayers[playerId];
         const name = activePlayers[playerId].name;
         if (player) {
+            joinGame(socket, activePlayers[playerId].socket);
             delete matchmakingPlayers[id];
             delete matchmakingPlayers[playerId];
             player.socket.emit('invite-accept', { id, name });

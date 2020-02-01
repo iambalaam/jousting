@@ -1,5 +1,6 @@
 import { CanvasRenderer, CANVAS_WIDTH, CANVAS_HEIGHT, Vector } from ".";
 import { PlayerState, createPlayer } from '../player';
+import { socket } from "..";
 
 // Game Constants
 const GRAVITY = 3e-2;
@@ -80,6 +81,9 @@ export class Game extends CanvasRenderer {
                 player.isJumping = true;
             }
         });
+        socket.on('hit', console.log);
+        socket.on('player-state', console.log);
+
     }
 
     drawBackground(ctx: CanvasRenderingContext2D) {
