@@ -16,7 +16,6 @@ const PLAYER_SMALLEST_MOVE_DELTA = 20;
 
 export class Game extends CanvasRenderer {
     pointer?: Vector = undefined;
-    activePointer?: boolean = undefined;
     // @ts-ignore handled in constructor
     player: PlayerState;
     // @ts-ignore handled in constructor
@@ -43,43 +42,41 @@ export class Game extends CanvasRenderer {
 
     attachListeners(ctx: CanvasRenderingContext2D) {
         ctx.canvas.addEventListener('mousedown', ({ x, y }: MouseEvent) => {
-            this.activePointer = true;
             this.pointer = this.getPointerPosition(ctx, { x, y });
         });
         ctx.canvas.addEventListener('mousemove', ({ x, y }: MouseEvent) => {
-            this.pointer = this.getPointerPosition(ctx, { x, y });
+            if (this.pointer) {
+                this.pointer = this.getPointerPosition(ctx, { x, y });
+            }
         });
         window.addEventListener('mouseup', () => {
-            this.activePointer = false;
             this.pointer = undefined;
         });
         ctx.canvas.addEventListener('mouseout', () => {
-            this.activePointer = false;
             this.pointer = undefined;
         });
         ctx.canvas.addEventListener('touchstart', (event: TouchEvent) => {
-            this.activePointer = true;
             const { clientX, clientY } = event.touches[0];
             this.pointer = this.getPointerPosition(ctx, { x: clientX, y: clientY });
         });
         ctx.canvas.addEventListener('touchmove', (event: TouchEvent) => {
-            const { clientX, clientY } = event.touches[0];
-            const pointer = this.getPointerPosition(ctx, { x: clientX, y: clientY });
-            if (pointer.x < 0 || pointer.x > CANVAS_WIDTH || pointer.y < 0 || pointer.y > CANVAS_HEIGHT) {
-                this.pointer = undefined;
-            } else {
-                this.pointer = pointer;
+            if (this.pointer) {
+                const { clientX, clientY } = event.touches[0];
+                const pointer = this.getPointerPosition(ctx, { x: clientX, y: clientY });
+                if (pointer.x < 0 || pointer.x > CANVAS_WIDTH || pointer.y < 0 || pointer.y > CANVAS_HEIGHT) {
+                    this.pointer = undefined;
+                } else {
+                    this.pointer = pointer;
+                }
             }
         });
         window.addEventListener('touchend', (event: TouchEvent) => {
             if (event.touches.length === 0) {
-                this.activePointer = false;
                 this.pointer = undefined;
             }
         });
         window.addEventListener('touchcancel', (event: TouchEvent) => {
             if (event.touches.length === 0) {
-                this.activePointer = false;
                 this.pointer = undefined;
             }
         });
@@ -126,14 +123,11 @@ export class Game extends CanvasRenderer {
             this.player.isJumping = false;
         }
 
-        if (this.activePointer && this.pointer) {
-            this.player.swordTip = this.pointer;
-        } else {
-            this.player.swordTip = undefined;
-        }
+        this.player.swordTip = this.pointer;
+
 
         // Move on input
-        if (this.activePointer && this.pointer && this.player.grounded) {
+        if (this.pointer && this.player.grounded) {
             if (Math.abs(this.pointer.x - this.player.position.x) > PLAYER_SMALLEST_MOVE_DELTA) {
                 this.player.velocity.x =
                     (PLAYER_ACCN * (PLAYER_SPEED * Math.sign(this.pointer.x - this.player.position.x))) +
