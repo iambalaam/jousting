@@ -8,6 +8,7 @@ export interface PlayerState {
     sliding: boolean,
     position: Vector,
     velocity: Vector,
+    swordTip?: Vector;
 }
 
 export interface Players {

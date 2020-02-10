@@ -103,8 +103,18 @@ export class Game extends CanvasRenderer {
     }
 
     drawPlayer(ctx: CanvasRenderingContext2D, player: PlayerState) {
-        ctx.fillStyle = player.color;
         const { x, y } = player.position;
+        if (player.swordTip) {
+            ctx.strokeStyle = 'white';
+            ctx.lineWidth = 2;
+            ctx.lineCap = 'round';
+            ctx.beginPath();
+            ctx.moveTo(x, y);
+            ctx.lineTo(player.swordTip.x, player.swordTip.y);
+            ctx.closePath();
+            ctx.stroke();
+        }
+        ctx.fillStyle = player.color;
         ctx.fillRect(x - PLAYER_RADIUS, y - PLAYER_RADIUS, PLAYER_DIAMETER, PLAYER_DIAMETER);
     }
 
@@ -114,6 +124,12 @@ export class Game extends CanvasRenderer {
             this.player.velocity.y = -PLAYER_JUMP;
             this.player.grounded = false;
             this.player.isJumping = false;
+        }
+
+        if (this.activePointer && this.pointer) {
+            this.player.swordTip = this.pointer;
+        } else {
+            this.player.swordTip = undefined;
         }
 
         // Move on input
@@ -165,9 +181,6 @@ export class Game extends CanvasRenderer {
                 this.drawPlayer(ctx, player);
             });
         this.drawPlayer(ctx, this.player);
-        if (this.pointer && this.activePointer) {
-            this.drawPlayer(ctx, createPlayer({ team: 'white', position: this.pointer }));
-        }
 
         // Update others
         socket.emit('player-state', { id: socket.id, state: this.player });
