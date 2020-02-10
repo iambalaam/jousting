@@ -10,6 +10,10 @@ export interface PlayerState {
     velocity: Vector,
 }
 
+export interface Players {
+    [playerId: string]: PlayerState;
+}
+
 const defaultPlayerOpts = {
     grounded: false,
     isJumping: false,

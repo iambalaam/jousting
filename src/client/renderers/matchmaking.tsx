@@ -4,11 +4,28 @@ import { socket } from "..";
 
 import './matchmaking.css';
 import { Game } from './game';
+import { createPlayer, Players } from '../player';
 
 export interface Player {
     id: string;
     name: string;
 }
+
+export const createGame = (playerIds: string[]): Players => {
+    if (playerIds.length !== 2) {
+        throw new Error('Only games of 2 players have been implemented');
+    }
+    const players: Players = {};
+    players[playerIds[0]] = createPlayer({
+        team: 'indianred',
+        position: { x: 100, y: 400 }
+    });
+    players[playerIds[1]] = createPlayer({
+        team: 'royalblue',
+        position: { x: 700, y: 400 }
+    });
+    return players;
+};
 
 export class Matchmaking implements Renderer {
     cleanActions: Array<() => void>;
@@ -31,9 +48,8 @@ export class Matchmaking implements Renderer {
         socket.on('invite-request', (player: Player) => {
             this.renderInvite(player);
         });
-        socket.on('invite-accept', () => {
-            this.updateRenderer(Game, {});
-            (window as any).socket = socket;
+        socket.on('invite-accept', (playerId: string) => {
+            this.updateRenderer(Game, createGame([socket.id, playerId]));
         });
     }
 
@@ -69,7 +85,7 @@ export class Matchmaking implements Renderer {
                 <span>Invite from:</span>
                 <span class="playername">{player.name || player.id}</span>
                 <button className="accept" onClick={() => {
-                    this.updateRenderer(Game, {});
+                    this.updateRenderer(Game, createGame([player.id, socket.id]));
                     socket.emit('invite-accept', player.id);
                 }}>accept</button>
                 <button className="decline" onClick={() => {

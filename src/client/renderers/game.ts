@@ -1,5 +1,5 @@
 import { CanvasRenderer, CANVAS_WIDTH, CANVAS_HEIGHT, Vector } from ".";
-import { PlayerState, createPlayer } from '../player';
+import { PlayerState, createPlayer, Players } from '../player';
 import { socket } from "..";
 
 // Game Constants
@@ -14,19 +14,26 @@ const PLAYER_ACCN = 0.8; // 0-1 where 1 is instantly new speed
 const PLAYER_JUMP = 10;
 const PLAYER_SMALLEST_MOVE_DELTA = 20;
 
-
-const player = createPlayer({
-    team: 'indianred',
-    position: { x: CANVAS_WIDTH / 2, y: CANVAS_HEIGHT / 2 }
-});
-
 export class Game extends CanvasRenderer {
     pointer?: Vector = undefined;
     activePointer?: boolean = undefined;
+    // @ts-ignore handled in constructor
+    player: PlayerState;
+    // @ts-ignore handled in constructor
+    enemies: Players;
 
-    constructor(private updateRenderer: (rendererConstructor: any, _opts: any) => void, _opts: any) {
+    constructor(private updateRenderer: (rendererConstructor: any, _opts: any) => void, players: Players) {
         super();
         this.attachListeners(this.ctx);
+        this.enemies = {};
+        Object.entries(players)
+            .forEach(([id, playerState]) => {
+                if (id === socket.id) {
+                    this.player = playerState;
+                } else {
+                    this.enemies[id] = playerState;
+                }
+            });
     }
 
     getPointerPosition(ctx: CanvasRenderingContext2D, v: Vector): Vector {
@@ -78,11 +85,13 @@ export class Game extends CanvasRenderer {
         });
         window.addEventListener('keydown', ({ key }) => {
             if (key === ' ') {
-                player.isJumping = true;
+                this.player.isJumping = true;
             }
         });
         socket.on('hit', console.log);
-        socket.on('player-state', console.log);
+        socket.on('player-state', ({ id, state }: { id: string, state: PlayerState; }) => {
+            this.enemies[id] = state;
+        });
 
     }
 
@@ -94,66 +103,66 @@ export class Game extends CanvasRenderer {
     }
 
     drawPlayer(ctx: CanvasRenderingContext2D, player: PlayerState) {
-        ctx.fillStyle = player.color;
-        const { x, y } = player.position;
+        ctx.fillStyle = this.player.color;
+        const { x, y } = this.player.position;
         ctx.fillRect(x - PLAYER_RADIUS, y - PLAYER_RADIUS, PLAYER_DIAMETER, PLAYER_DIAMETER);
     }
 
-    draw(ctx: CanvasRenderingContext2D, frameDuration: number) {
+    draw = (ctx: CanvasRenderingContext2D, frameDuration: number) => {
         // Move from input
-        if (player.isJumping) {
-            player.velocity.y = -PLAYER_JUMP;
-            player.grounded = false;
-            player.isJumping = false;
+        if (this.player.isJumping) {
+            this.player.velocity.y = -PLAYER_JUMP;
+            this.player.grounded = false;
+            this.player.isJumping = false;
         }
 
         // Move on input
-        if (this.activePointer && this.pointer && player.grounded) {
-            if (Math.abs(this.pointer.x - player.position.x) > PLAYER_SMALLEST_MOVE_DELTA) {
-                player.velocity.x =
-                    (PLAYER_ACCN * (PLAYER_SPEED * Math.sign(this.pointer.x - player.position.x))) +
-                    ((1 - PLAYER_ACCN) * (player.velocity.x));
+        if (this.activePointer && this.pointer && this.player.grounded) {
+            if (Math.abs(this.pointer.x - this.player.position.x) > PLAYER_SMALLEST_MOVE_DELTA) {
+                this.player.velocity.x =
+                    (PLAYER_ACCN * (PLAYER_SPEED * Math.sign(this.pointer.x - this.player.position.x))) +
+                    ((1 - PLAYER_ACCN) * (this.player.velocity.x));
             }
         }
 
         // Slow down on the ground or walls
-        if (player.grounded) {
-            player.velocity.x *= PLAYER_ACCN; // This needs to be an equation based on frameDuration
+        if (this.player.grounded) {
+            this.player.velocity.x *= PLAYER_ACCN; // This needs to be an equation based on frameDuration
         }
-        if (player.sliding) {
-            player.velocity.y *= PLAYER_ACCN;
+        if (this.player.sliding) {
+            this.player.velocity.y *= PLAYER_ACCN;
         }
 
         // Perform physics
-        player.velocity.y += (GRAVITY * frameDuration);
-        player.position.x += player.velocity.x;
-        player.position.y += player.velocity.y;
+        this.player.velocity.y += (GRAVITY * frameDuration);
+        this.player.position.x += this.player.velocity.x;
+        this.player.position.y += this.player.velocity.y;
 
         // Calculate collisions
         // floor
-        if (player.position.y + PLAYER_RADIUS > FLOOR_HEIGHT) {
-            player.velocity.y = 0;
-            player.position.y = FLOOR_HEIGHT - PLAYER_RADIUS;
-            player.grounded = true;
+        if (this.player.position.y + PLAYER_RADIUS > FLOOR_HEIGHT) {
+            this.player.velocity.y = 0;
+            this.player.position.y = FLOOR_HEIGHT - PLAYER_RADIUS;
+            this.player.grounded = true;
         }
         // walls
-        if (player.position.x <= 0 + PLAYER_RADIUS) {
-            player.velocity.x = 0;
-            player.position.x = 0 + PLAYER_RADIUS;
-            player.sliding = true;
-        } else if (player.position.x >= CANVAS_WIDTH - PLAYER_RADIUS) {
-            player.velocity.x = 0;
-            player.position.x = CANVAS_WIDTH - PLAYER_RADIUS;
-            player.sliding = true;
+        if (this.player.position.x <= 0 + PLAYER_RADIUS) {
+            this.player.velocity.x = 0;
+            this.player.position.x = 0 + PLAYER_RADIUS;
+            this.player.sliding = true;
+        } else if (this.player.position.x >= CANVAS_WIDTH - PLAYER_RADIUS) {
+            this.player.velocity.x = 0;
+            this.player.position.x = CANVAS_WIDTH - PLAYER_RADIUS;
+            this.player.sliding = true;
         } else {
-            player.sliding = false;
+            this.player.sliding = false;
         }
 
         //Draw
         this.drawBackground(ctx);
-        this.drawPlayer(ctx, player);
+        this.drawPlayer(ctx, this.player);
         if (this.pointer && this.activePointer) {
             this.drawPlayer(ctx, createPlayer({ team: 'white', position: this.pointer }));
         }
-    }
+    };
 }
