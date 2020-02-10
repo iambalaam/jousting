@@ -18,11 +18,11 @@ export const createGame = (playerIds: string[]): Players => {
     const players: Players = {};
     players[playerIds[0]] = createPlayer({
         team: 'indianred',
-        position: { x: 100, y: 400 }
+        position: { x: 100, y: 200 }
     });
     players[playerIds[1]] = createPlayer({
         team: 'royalblue',
-        position: { x: 700, y: 400 }
+        position: { x: 700, y: 200 }
     });
     return players;
 };

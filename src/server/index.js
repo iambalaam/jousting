@@ -52,7 +52,7 @@ io.on('connection', (socket) => {
             joinGame(socket, activePlayers[playerId].socket);
             delete matchmakingPlayers[id];
             delete matchmakingPlayers[playerId];
-            player.socket.emit('invite-accept', { id, name });
+            player.socket.emit('invite-accept', id);
             io.emit('players-changed', Object.keys(matchmakingPlayers));
         }
     });

@@ -103,8 +103,8 @@ export class Game extends CanvasRenderer {
     }
 
     drawPlayer(ctx: CanvasRenderingContext2D, player: PlayerState) {
-        ctx.fillStyle = this.player.color;
-        const { x, y } = this.player.position;
+        ctx.fillStyle = player.color;
+        const { x, y } = player.position;
         ctx.fillRect(x - PLAYER_RADIUS, y - PLAYER_RADIUS, PLAYER_DIAMETER, PLAYER_DIAMETER);
     }
 
@@ -160,9 +160,16 @@ export class Game extends CanvasRenderer {
 
         //Draw
         this.drawBackground(ctx);
+        Object.entries(this.enemies)
+            .forEach(([_id, player]) => {
+                this.drawPlayer(ctx, player);
+            });
         this.drawPlayer(ctx, this.player);
         if (this.pointer && this.activePointer) {
             this.drawPlayer(ctx, createPlayer({ team: 'white', position: this.pointer }));
         }
+
+        // Update others
+        socket.emit('player-state', { id: socket.id, state: this.player });
     };
 }
