@@ -10,10 +10,11 @@ const FLOOR_HEIGHT = 300;
 const PLAYER_DIAMETER = 15;
 const PLAYER_RADIUS = PLAYER_DIAMETER / 2;
 const PLAYER_SPEED = 7;
-const PLAYER_ACCN = 0.8; // 0-1 where 1 is instantly new speed
+const PLAYER_ACCN = 0.8;                        // [0 - 1] where 1 is instantly new speed
 const PLAYER_JUMP = 10;
 const PLAYER_SMALLEST_MOVE_DELTA = 20;
-const PLAYER_SWORD_MAX_LENGTH = 50;
+const PLAYER_SWORD_DRAW_SPEED = 0.1;           // [0 - 1] where 1 is instantly new length
+const PLAYER_SWORD_MAX_LENGTH = 120;
 
 export class Game extends CanvasRenderer {
     pointer?: Vector = undefined;
@@ -51,10 +52,16 @@ export class Game extends CanvasRenderer {
         // Sowrd should a proportion of max length
         // This is a function of playerVelocity, prevSwordLength and frameDuration
         const playerVelocity = Math.hypot(player.velocity.x, player.velocity.y);
+        const playerVelocityContributor = 0.25 + (Math.atan(playerVelocity) * 3 / (Math.PI * 4)); // [0.25 - 1]
         const prevSwordLength = player.swordTip
-            ? Math.hypot(player.position.x - player.swordTip.x, player.position.y - player.swordTip.y)
+            ? Math.hypot(
+                player.position.x - player.velocity.x - player.swordTip.x,
+                player.position.y - player.velocity.y - player.swordTip.y
+            )
             : 0;
-        const swordLength = 50;
+        const swordLength =
+            (PLAYER_SWORD_DRAW_SPEED * playerVelocityContributor * PLAYER_SWORD_MAX_LENGTH) +
+            ((1 - PLAYER_SWORD_DRAW_SPEED) * prevSwordLength);
         const swordTip: Vector = {
             x: player.position.x + unitSword.x * swordLength,
             y: player.position.y + unitSword.y * swordLength
@@ -145,8 +152,6 @@ export class Game extends CanvasRenderer {
             this.player.isJumping = false;
         }
 
-        this.player.swordTip = this.getSwordTip(this.player, this.pointer, frameDuration);
-
         // Move on input
         if (this.pointer && this.player.grounded) {
             if (Math.abs(this.pointer.x - this.player.position.x) > PLAYER_SMALLEST_MOVE_DELTA) {
@@ -188,6 +193,9 @@ export class Game extends CanvasRenderer {
         } else {
             this.player.sliding = false;
         }
+
+        // Calculate sword position
+        this.player.swordTip = this.getSwordTip(this.player, this.pointer, frameDuration);
 
         //Draw
         this.drawBackground(ctx);
