@@ -13,6 +13,7 @@ const PLAYER_SPEED = 7;
 const PLAYER_ACCN = 0.8; // 0-1 where 1 is instantly new speed
 const PLAYER_JUMP = 10;
 const PLAYER_SMALLEST_MOVE_DELTA = 20;
+const PLAYER_SWORD_MAX_LENGTH = 50;
 
 export class Game extends CanvasRenderer {
     pointer?: Vector = undefined;
@@ -35,9 +36,30 @@ export class Game extends CanvasRenderer {
             });
     }
 
-    getPointerPosition(ctx: CanvasRenderingContext2D, v: Vector): Vector {
+    getPointerPosition(ctx: CanvasRenderingContext2D, pointer: Vector): Vector {
         const { left, top } = ctx.canvas.getBoundingClientRect();
-        return { x: v.x - left, y: v.y - top };
+        return { x: pointer.x - left, y: pointer.y - top };
+    }
+
+    getSwordTip(player: PlayerState, pointer: Vector | undefined, _frameDuration: number): Vector | undefined {
+        if (!pointer) return;
+        const dX = pointer.x - player.position.x;
+        const dY = pointer.y - player.position.y;
+        const pointerLength = Math.hypot(dX, dY);
+        const unitSword: Vector = { x: dX / pointerLength, y: dY / pointerLength };
+
+        // Sowrd should a proportion of max length
+        // This is a function of playerVelocity, prevSwordLength and frameDuration
+        const playerVelocity = Math.hypot(player.velocity.x, player.velocity.y);
+        const prevSwordLength = player.swordTip
+            ? Math.hypot(player.position.x - player.swordTip.x, player.position.y - player.swordTip.y)
+            : 0;
+        const swordLength = 50;
+        const swordTip: Vector = {
+            x: player.position.x + unitSword.x * swordLength,
+            y: player.position.y + unitSword.y * swordLength
+        };
+        return swordTip;
     }
 
     attachListeners(ctx: CanvasRenderingContext2D) {
@@ -123,8 +145,7 @@ export class Game extends CanvasRenderer {
             this.player.isJumping = false;
         }
 
-        this.player.swordTip = this.pointer;
-
+        this.player.swordTip = this.getSwordTip(this.player, this.pointer, frameDuration);
 
         // Move on input
         if (this.pointer && this.player.grounded) {
