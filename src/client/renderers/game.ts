@@ -1,5 +1,5 @@
 import { CanvasRenderer, CANVAS_WIDTH, CANVAS_HEIGHT, Vector } from ".";
-import { PlayerState, createPlayer, Players } from '../player';
+import { PlayerState, Players } from '../player';
 import { socket } from "..";
 
 // Game Constants
@@ -69,6 +69,20 @@ export class Game extends CanvasRenderer {
         return swordTip;
     }
 
+    onPlayerState = ({ id, state }: { id: string, state: PlayerState; }) => {
+        this.enemies[id] = state;
+    };
+
+    onHit = (id: string) => {
+        if (id === socket.id) {
+            // You've been hit
+            console.log(`You've been hit!`);
+        } else {
+            // You've scored a hit
+            console.log(`You've scored a hit`);
+        }
+    };
+
     attachListeners(ctx: CanvasRenderingContext2D) {
         ctx.canvas.addEventListener('mousedown', ({ x, y }: MouseEvent) => {
             this.pointer = this.getPointerPosition(ctx, { x, y });
@@ -114,10 +128,8 @@ export class Game extends CanvasRenderer {
                 this.player.isJumping = true;
             }
         });
-        socket.on('hit', console.log);
-        socket.on('player-state', ({ id, state }: { id: string, state: PlayerState; }) => {
-            this.enemies[id] = state;
-        });
+        socket.on('hit', this.onHit);
+        socket.on('player-state', this.onPlayerState);
 
     }
 
@@ -196,6 +208,22 @@ export class Game extends CanvasRenderer {
 
         // Calculate sword position
         this.player.swordTip = this.getSwordTip(this.player, this.pointer, frameDuration);
+
+        // Hit detection
+        if (this.player.swordTip) {
+            Object.entries(this.enemies)
+                .forEach(([playerId, enemy]) => {
+                    if (
+                        this.player.swordTip!.x > enemy.position.x - PLAYER_RADIUS &&
+                        this.player.swordTip!.x < enemy.position.x + PLAYER_RADIUS &&
+                        this.player.swordTip!.y > enemy.position.y - PLAYER_RADIUS &&
+                        this.player.swordTip!.y < enemy.position.y + PLAYER_RADIUS
+                    ) {
+                        socket.emit('hit', playerId);
+                        this.onHit(playerId);
+                    }
+                });
+        }
 
         //Draw
         this.drawBackground(ctx);
